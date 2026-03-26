@@ -2,7 +2,7 @@
     <h1 class="text-xl font-bold mb-4">Historial de Ventas</h1>
 
     {{-- Filtros --}}
-    <div class="flex gap-4 mb-4">
+    <div class="flex flex-wrap gap-4 mb-4">
         <div>
             <label class="text-sm font-medium">Desde</label>
             <input wire:model.live="fechaDesde" type="date" class="border rounded px-3 py-2 block">
@@ -10,6 +10,19 @@
         <div>
             <label class="text-sm font-medium">Hasta</label>
             <input wire:model.live="fechaHasta" type="date" class="border rounded px-3 py-2 block">
+        </div>
+        <div>
+            <label class="text-sm font-medium">Producto</label>
+            <input wire:model.live="filtroProducto" placeholder="Filtrar por producto..."
+                   class="border rounded px-3 py-2 block">
+        </div>
+        <div class="flex items-end gap-2">
+            <button wire:click="exportarExcel" class="bg-green-600 text-white px-4 py-2 rounded text-sm">
+                ⬇ Excel
+            </button>
+            <button wire:click="exportarPdf" class="bg-red-600 text-white px-4 py-2 rounded text-sm">
+                ⬇ PDF
+            </button>
         </div>
     </div>
 
@@ -38,7 +51,6 @@
                 </td>
             </tr>
 
-            {{-- Detalle inline --}}
             @if($ventaDetalle && $ventaDetalle === $v->id)
             <tr>
                 <td colspan="5" class="bg-gray-50 px-4 py-3">
@@ -72,7 +84,6 @@
         </tbody>
     </table>
 
-    {{-- Resumen --}}
     @if($ventas->count())
     <div class="bg-white rounded shadow p-4 flex gap-8 text-sm">
         <div><span class="text-gray-500">Ventas:</span> <strong>{{ $ventas->count() }}</strong></div>

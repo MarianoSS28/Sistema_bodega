@@ -9,10 +9,15 @@
 </head>
 <body class="bg-gray-100 text-gray-800">
 
-    <nav class="bg-gray-800 text-white px-6 py-3 flex gap-6">
-        <a href="{{ route('ventas') }}"    class="hover:text-yellow-400">Ventas</a>
-        <a href="{{ route('productos') }}" class="hover:text-yellow-400">Productos</a>
-        <a href="{{ route('historial') }}" class="hover:text-yellow-400">Historial</a>
+    <nav class="bg-gray-800 text-white px-6 py-3 flex gap-6 items-center">
+        <a href="{{ route('dashboard') }}"  class="hover:text-yellow-400">Dashboard</a>
+        <a href="{{ route('ventas') }}"     class="hover:text-yellow-400">Ventas</a>
+        <a href="{{ route('productos') }}"  class="hover:text-yellow-400">Productos</a>
+        <a href="{{ route('historial') }}"  class="hover:text-yellow-400">Historial</a>
+        <a href="{{ route('vouchers') }}"   class="hover:text-yellow-400">Vouchers</a>
+
+        {{-- Badge alertas stock --}}
+        <livewire:stock-alertas-badge />
     </nav>
 
     <main class="p-6">

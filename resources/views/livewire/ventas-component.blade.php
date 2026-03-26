@@ -10,7 +10,8 @@
         <input wire:model="codigoBusqueda"
                wire:keydown.enter="buscarProducto"
                placeholder="Escanea o escribe el código de barras..."
-               class="border rounded px-3 py-2 flex-1">
+               class="border rounded px-3 py-2 flex-1"
+               autofocus>
         <button wire:click="buscarProducto" class="bg-gray-700 text-white px-4 py-2 rounded">Buscar</button>
     </div>
 
@@ -18,17 +19,13 @@
         <div class="bg-red-100 text-red-600 px-4 py-2 rounded mb-3">{{ $error }}</div>
     @endif
 
-    {{-- Producto encontrado --}}
-    @if($productoEncontrado)
-    <div class="bg-blue-50 border border-blue-200 rounded p-4 mb-4 flex items-center gap-4">
-        <div class="flex-1">
-            <p class="font-semibold">{{ $productoEncontrado['nombre'] }}</p>
-            <p class="text-sm text-gray-500">Stock: {{ $productoEncontrado['stock'] }} | Precio: S/ {{ number_format($productoEncontrado['precio'], 2) }}</p>
+    {{-- Foto del último producto agregado --}}
+    @if(count($carrito) && $carrito[array_key_last($carrito)]['foto_path'])
+        <div class="mb-4 flex justify-center">
+            <img src="{{ Storage::url($carrito[array_key_last($carrito)]['foto_path']) }}"
+                 alt="Producto"
+                 class="h-48 w-48 object-cover rounded shadow-lg border">
         </div>
-        <input wire:model="cantidad" type="number" min="1" max="{{ $productoEncontrado['stock'] }}"
-               class="border rounded px-2 py-1 w-20 text-center">
-        <button wire:click="agregarAlCarrito" class="bg-blue-600 text-white px-4 py-2 rounded">Agregar</button>
-    </div>
     @endif
 
     {{-- Carrito --}}
@@ -45,7 +42,13 @@
         <tbody>
             @forelse($carrito as $i => $item)
             <tr class="border-t">
-                <td class="p-2">{{ $item['nombre'] }}</td>
+                <td class="p-2 flex items-center gap-2">
+                    @if($item['foto_path'])
+                        <img src="{{ Storage::url($item['foto_path']) }}"
+                             class="w-8 h-8 object-cover rounded">
+                    @endif
+                    {{ $item['nombre'] }}
+                </td>
                 <td class="p-2 text-right">S/ {{ number_format($item['precio_unitario'], 2) }}</td>
                 <td class="p-2 text-right">{{ $item['cantidad'] }}</td>
                 <td class="p-2 text-right">S/ {{ number_format($item['subtotal'], 2) }}</td>

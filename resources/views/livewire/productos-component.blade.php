@@ -14,6 +14,7 @@
     <table class="w-full bg-white rounded shadow text-sm">
         <thead class="bg-gray-200">
             <tr>
+                <th class="p-2 text-left">Foto</th>
                 <th class="p-2 text-left">Código</th>
                 <th class="p-2 text-left">Nombre</th>
                 <th class="p-2 text-right">Precio</th>
@@ -24,10 +25,21 @@
         <tbody>
             @forelse($productos as $p)
             <tr class="border-t">
+                <td class="p-2">
+                    @if($p->foto_path)
+                        <img src="{{ Storage::url($p->foto_path) }}" class="w-10 h-10 object-cover rounded">
+                    @else
+                        <div class="w-10 h-10 bg-gray-200 rounded flex items-center justify-center text-gray-400 text-xs">sin foto</div>
+                    @endif
+                </td>
                 <td class="p-2">{{ $p->codigo_barras }}</td>
                 <td class="p-2">{{ $p->nombre }}</td>
                 <td class="p-2 text-right">S/ {{ number_format($p->precio, 2) }}</td>
-                <td class="p-2 text-right">{{ $p->stock }}</td>
+                <td class="p-2 text-right">
+                    <span class="{{ $p->stock == 0 ? 'text-red-600 font-bold' : ($p->stock <= 5 ? 'text-orange-500 font-semibold' : '') }}">
+                        {{ $p->stock }}
+                    </span>
+                </td>
                 <td class="p-2 text-center space-x-2">
                     <button wire:click="abrirFormulario({{ $p->id }})" class="text-blue-600 hover:underline">Editar</button>
                     <button wire:click="desactivar({{ $p->id }})"
@@ -36,7 +48,7 @@
                 </td>
             </tr>
             @empty
-            <tr><td colspan="5" class="p-4 text-center text-gray-400">Sin resultados</td></tr>
+            <tr><td colspan="6" class="p-4 text-center text-gray-400">Sin resultados</td></tr>
             @endforelse
         </tbody>
     </table>
@@ -69,6 +81,17 @@
                         <input wire:model="stock" type="number" class="border rounded w-full px-3 py-2">
                         @error('stock') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
                     </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium">Foto</label>
+                    @if($fotoActual)
+                        <img src="{{ Storage::url($fotoActual) }}" class="w-20 h-20 object-cover rounded mb-2">
+                    @endif
+                    @if($foto)
+                        <img src="{{ $foto->temporaryUrl() }}" class="w-20 h-20 object-cover rounded mb-2 border-2 border-blue-400">
+                    @endif
+                    <input type="file" wire:model="foto" accept="image/*" class="border rounded w-full px-3 py-2">
+                    @error('foto') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
                 </div>
             </div>
 

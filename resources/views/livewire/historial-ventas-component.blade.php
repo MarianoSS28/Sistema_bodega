@@ -1,93 +1,102 @@
-<div>
-    <h1 class="text-xl font-bold mb-4">Historial de Ventas</h1>
+<div class="animate-fade-in">
+    <h1 class="page-title">Historial de Ventas</h1>
 
     {{-- Filtros --}}
-    <div class="flex flex-wrap gap-4 mb-4">
-        <div>
-            <label class="text-sm font-medium">Desde</label>
-            <input wire:model.live="fechaDesde" type="date" class="border rounded px-3 py-2 block">
-        </div>
-        <div>
-            <label class="text-sm font-medium">Hasta</label>
-            <input wire:model.live="fechaHasta" type="date" class="border rounded px-3 py-2 block">
-        </div>
-        <div>
-            <label class="text-sm font-medium">Producto</label>
-            <input wire:model.live="filtroProducto" placeholder="Filtrar por producto..."
-                   class="border rounded px-3 py-2 block">
-        </div>
-        <div class="flex items-end gap-2">
-            <button wire:click="exportarExcel" class="bg-green-600 text-white px-4 py-2 rounded text-sm">
-                ⬇ Excel
-            </button>
-            <button wire:click="exportarPdf" class="bg-red-600 text-white px-4 py-2 rounded text-sm">
-                ⬇ PDF
-            </button>
+    <div class="card" style="padding:1.15rem 1.25rem; margin-bottom:1.25rem;">
+        <div style="display:flex; flex-wrap:wrap; gap:.85rem; align-items:flex-end;">
+            <div>
+                <label style="display:block; font-size:.78rem; font-weight:600; color:var(--color-text-muted); margin-bottom:.3rem;">DESDE</label>
+                <input wire:model.live="fechaDesde" type="date" class="input" style="width:auto;">
+            </div>
+            <div>
+                <label style="display:block; font-size:.78rem; font-weight:600; color:var(--color-text-muted); margin-bottom:.3rem;">HASTA</label>
+                <input wire:model.live="fechaHasta" type="date" class="input" style="width:auto;">
+            </div>
+            <div style="flex:1; min-width:180px;">
+                <label style="display:block; font-size:.78rem; font-weight:600; color:var(--color-text-muted); margin-bottom:.3rem;">PRODUCTO</label>
+                <input wire:model.live="filtroProducto" placeholder="Filtrar por producto..." class="input">
+            </div>
+            <div style="display:flex; gap:.5rem;">
+                <button wire:click="exportarExcel" class="btn btn-success">⬇ Excel</button>
+                <button wire:click="exportarPdf"   class="btn btn-danger">⬇ PDF</button>
+            </div>
         </div>
     </div>
 
-    {{-- Tabla ventas --}}
-    <table class="w-full bg-white rounded shadow text-sm mb-6">
-        <thead class="bg-gray-200">
-            <tr>
-                <th class="p-2 text-left">#</th>
-                <th class="p-2 text-left">Fecha</th>
-                <th class="p-2 text-right">Total</th>
-                <th class="p-2 text-center">Ítems</th>
-                <th class="p-2 text-center">Detalle</th>
-            </tr>
-        </thead>
-        <tbody>
-            @forelse($ventas as $v)
-            <tr class="border-t {{ $ventaDetalle === $v->id ? 'bg-blue-50' : '' }}">
-                <td class="p-2 font-mono">{{ $v->id }}</td>
-                <td class="p-2">{{ \Carbon\Carbon::parse($v->fecha_creacion)->format('d/m/Y H:i') }}</td>
-                <td class="p-2 text-right font-semibold">S/ {{ number_format($v->total, 2) }}</td>
-                <td class="p-2 text-center">{{ $v->detalles->count() }}</td>
-                <td class="p-2 text-center">
-                    <button wire:click="verDetalle({{ $v->id }})" class="text-blue-600 hover:underline">
-                        {{ $ventaDetalle === $v->id ? 'Cerrar' : 'Ver' }}
-                    </button>
-                </td>
-            </tr>
+    {{-- Tabla --}}
+    <div class="table-wrap animate-fade-in delay-100" style="margin-bottom:1.25rem;">
+        <table>
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Fecha</th>
+                    <th class="text-right">Total</th>
+                    <th class="text-center">Ítems</th>
+                    <th class="text-center">Detalle</th>
+                </tr>
+            </thead>
+            <tbody>
+                @forelse($ventas as $v)
+                <tr style="{{ $ventaDetalle === $v->id ? 'background:var(--color-turquesa-muted);' : '' }}">
+                    <td style="font-family:monospace; font-size:.82rem; color:var(--color-text-secondary);">#{{ $v->id }}</td>
+                    <td>{{ \Carbon\Carbon::parse($v->fecha_creacion)->format('d/m/Y H:i') }}</td>
+                    <td class="text-right" style="font-weight:700; color:var(--color-turquesa);">S/ {{ number_format($v->total, 2) }}</td>
+                    <td class="text-center">
+                        <span class="badge badge-info">{{ $v->detalles->count() }}</span>
+                    </td>
+                    <td class="text-center">
+                        <button wire:click="verDetalle({{ $v->id }})" class="link-action">
+                            {{ $ventaDetalle === $v->id ? '▲ Cerrar' : '▼ Ver' }}
+                        </button>
+                    </td>
+                </tr>
 
-            @if($ventaDetalle && $ventaDetalle === $v->id)
-            <tr>
-                <td colspan="5" class="bg-gray-50 px-4 py-3">
-                    <table class="w-full text-sm">
-                        <thead>
-                            <tr class="text-gray-500">
-                                <th class="text-left pb-1">Producto</th>
-                                <th class="text-right pb-1">Precio</th>
-                                <th class="text-right pb-1">Cant.</th>
-                                <th class="text-right pb-1">Subtotal</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach($ventaAbierta->detalles as $d)
-                            <tr class="border-t border-gray-200">
-                                <td class="py-1">{{ $d->producto->nombre ?? '—' }}</td>
-                                <td class="py-1 text-right">S/ {{ number_format($d->precio_unitario, 2) }}</td>
-                                <td class="py-1 text-right">{{ $d->cantidad }}</td>
-                                <td class="py-1 text-right">S/ {{ number_format($d->subtotal, 2) }}</td>
-                            </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                </td>
-            </tr>
-            @endif
+                @if($ventaDetalle && $ventaDetalle === $v->id)
+                <tr>
+                    <td colspan="5" style="background:var(--color-surface-2); padding:1rem 1.5rem;">
+                        <table style="width:100%; border-collapse:collapse;">
+                            <thead>
+                                <tr>
+                                    <th style="text-align:left; font-size:.75rem; color:var(--color-text-muted); font-weight:600; padding-bottom:.5rem; text-transform:uppercase; letter-spacing:.04em;">Producto</th>
+                                    <th style="text-align:right; font-size:.75rem; color:var(--color-text-muted); font-weight:600; padding-bottom:.5rem; text-transform:uppercase; letter-spacing:.04em;">Precio</th>
+                                    <th style="text-align:right; font-size:.75rem; color:var(--color-text-muted); font-weight:600; padding-bottom:.5rem; text-transform:uppercase; letter-spacing:.04em;">Cant.</th>
+                                    <th style="text-align:right; font-size:.75rem; color:var(--color-text-muted); font-weight:600; padding-bottom:.5rem; text-transform:uppercase; letter-spacing:.04em;">Subtotal</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($ventaAbierta->detalles as $d)
+                                <tr style="border-top:1px solid var(--color-border);">
+                                    <td style="padding:.5rem 0; font-weight:500;">{{ $d->producto->nombre ?? '—' }}</td>
+                                    <td style="padding:.5rem 0; text-align:right;">S/ {{ number_format($d->precio_unitario, 2) }}</td>
+                                    <td style="padding:.5rem 0; text-align:right;">{{ $d->cantidad }}</td>
+                                    <td style="padding:.5rem 0; text-align:right; font-weight:700; color:var(--color-turquesa);">S/ {{ number_format($d->subtotal, 2) }}</td>
+                                </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </td>
+                </tr>
+                @endif
 
-            @empty
-            <tr><td colspan="5" class="p-4 text-center text-gray-400">Sin ventas en el período</td></tr>
-            @endforelse
-        </tbody>
-    </table>
+                @empty
+                <tr>
+                    <td colspan="5" style="text-align:center; padding:2.5rem; color:var(--color-text-muted);">Sin ventas en el período</td>
+                </tr>
+                @endforelse
+            </tbody>
+        </table>
+    </div>
 
     @if($ventas->count())
-    <div class="bg-white rounded shadow p-4 flex gap-8 text-sm">
-        <div><span class="text-gray-500">Ventas:</span> <strong>{{ $ventas->count() }}</strong></div>
-        <div><span class="text-gray-500">Total período:</span> <strong>S/ {{ number_format($ventas->sum('total'), 2) }}</strong></div>
+    <div class="card animate-fade-in delay-200" style="padding:1rem 1.5rem; display:flex; gap:2rem; font-size:.875rem;">
+        <div>
+            <span style="color:var(--color-text-muted);">Ventas:</span>
+            <strong style="margin-left:.35rem; color:var(--color-text-primary);">{{ $ventas->count() }}</strong>
+        </div>
+        <div>
+            <span style="color:var(--color-text-muted);">Total período:</span>
+            <strong style="margin-left:.35rem; color:var(--color-turquesa); font-size:1rem;">S/ {{ number_format($ventas->sum('total'), 2) }}</strong>
+        </div>
     </div>
     @endif
 </div>

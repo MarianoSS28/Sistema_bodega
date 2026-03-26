@@ -1,26 +1,34 @@
-<div class="relative" wire:poll.30s="cargar">
-    <button wire:click="toggleMostrar" class="relative flex items-center gap-1 text-white hover:text-yellow-400">
-        🔔
+<div style="position:relative;" wire:poll.30s="cargar">
+    <button wire:click="toggleMostrar"
+            style="position:relative; display:flex; align-items:center; gap:.3rem; color:rgba(255,255,255,.9); background:none; border:none; cursor:pointer; padding:.3rem; border-radius:var(--radius-md); transition:background var(--transition-fast);"
+            onmouseover="this.style.background='rgba(255,255,255,.15)'"
+            onmouseout="this.style.background='none'">
+        <span style="font-size:1.15rem;">🔔</span>
         @if($totalAlertas > 0)
-            <span class="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+            <span style="position:absolute; top:-4px; right:-4px; background:var(--color-danger); color:#fff; font-size:.65rem; font-weight:700; border-radius:99px; min-width:18px; height:18px; display:flex; align-items:center; justify-content:center; border:2px solid var(--color-turquesa); animation: pulse-brand 2s infinite;">
                 {{ $totalAlertas }}
             </span>
         @endif
     </button>
 
     @if($mostrar && $totalAlertas > 0)
-    <div class="absolute right-0 top-8 bg-white text-gray-800 rounded shadow-lg w-72 z-50 border">
-        <div class="px-4 py-2 border-b font-semibold text-sm flex justify-between">
-            <span>Alertas de stock</span>
-            <span class="text-red-600">{{ $agotados }} agotados</span>
+    <div class="animate-scale-in"
+         style="position:absolute; right:0; top:calc(100% + 10px); background:var(--color-surface); border-radius:var(--radius-lg); box-shadow:var(--shadow-lg); width:280px; z-index:200; border:1px solid var(--color-border); overflow:hidden;">
+
+        <div style="padding:.75rem 1rem; border-bottom:1px solid var(--color-border); display:flex; justify-content:space-between; align-items:center; background:var(--color-turquesa-muted);">
+            <span style="font-size:.85rem; font-weight:700; color:var(--color-text-primary);">Alertas de stock</span>
+            <span class="badge badge-danger">{{ $agotados }} agotados</span>
         </div>
-        <ul class="max-h-64 overflow-y-auto divide-y">
+
+        <ul style="max-height:240px; overflow-y:auto; list-style:none; padding:0; margin:0;">
             @foreach($items as $item)
-            <li class="px-4 py-2 text-sm flex justify-between items-center">
-                <span>{{ $item->nombre }}</span>
-                <span class="{{ $item->tipo_alerta === 'AGOTADO' ? 'text-red-600 font-bold' : 'text-orange-500 font-semibold' }}">
-                    {{ $item->tipo_alerta === 'AGOTADO' ? 'AGOTADO' : "Stock: {$item->stock}" }}
-                </span>
+            <li style="padding:.6rem 1rem; border-bottom:1px solid var(--color-border); display:flex; justify-content:space-between; align-items:center; font-size:.83rem;">
+                <span style="color:var(--color-text-primary); font-weight:500;">{{ $item->nombre }}</span>
+                @if($item->tipo_alerta === 'AGOTADO')
+                    <span class="badge badge-danger">AGOTADO</span>
+                @else
+                    <span class="badge badge-warning">{{ $item->stock }} uds.</span>
+                @endif
             </li>
             @endforeach
         </ul>

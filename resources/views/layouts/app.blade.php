@@ -4,23 +4,33 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Sistema Bodega</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @livewireStyles
 </head>
-<body class="bg-gray-100 text-gray-800">
+<body>
 
-    <nav class="bg-gray-800 text-white px-6 py-3 flex gap-6 items-center">
-        <a href="{{ route('dashboard') }}"  class="hover:text-yellow-400">Dashboard</a>
-        <a href="{{ route('ventas') }}"     class="hover:text-yellow-400">Ventas</a>
-        <a href="{{ route('productos') }}"  class="hover:text-yellow-400">Productos</a>
-        <a href="{{ route('historial') }}"  class="hover:text-yellow-400">Historial</a>
-        <a href="{{ route('vouchers') }}"   class="hover:text-yellow-400">Vouchers</a>
+    <nav class="nav-bar">
+        <span class="brand">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>
+            </svg>
+            Bodega
+        </span>
 
-        {{-- Badge alertas stock --}}
-        <livewire:stock-alertas-badge />
+        <a href="{{ route('dashboard') }}"  class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}">Dashboard</a>
+        <a href="{{ route('ventas') }}"     class="nav-link {{ request()->routeIs('ventas')    ? 'active' : '' }}">Ventas</a>
+        <a href="{{ route('productos') }}"  class="nav-link {{ request()->routeIs('productos') ? 'active' : '' }}">Productos</a>
+        <a href="{{ route('historial') }}"  class="nav-link {{ request()->routeIs('historial') ? 'active' : '' }}">Historial</a>
+        <a href="{{ route('vouchers') }}"   class="nav-link {{ request()->routeIs('vouchers')  ? 'active' : '' }}">Vouchers</a>
+
+        <div style="margin-left:auto">
+            <livewire:stock-alertas-badge />
+        </div>
     </nav>
 
-    <main class="p-6">
+    <main style="padding: 1.5rem; max-width: 1400px; margin: 0 auto;">
         {{ $slot }}
     </main>
 

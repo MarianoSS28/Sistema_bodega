@@ -1,27 +1,97 @@
 <div class="animate-fade-in">
     <h1 class="page-title">Nueva Venta</h1>
 
-    @if(session('ok'))
-        <div class="alert alert-success" style="margin-bottom:1rem;">✅ {{ session('ok') }}</div>
+    {{-- ✅ Modal de venta exitosa --}}
+    @if($ventaExitosa)
+    <div class="modal-backdrop" style="z-index:999;">
+        <div class="animate-scale-in" style="
+            background: var(--color-surface);
+            border-radius: var(--radius-xl);
+            padding: 2.5rem 2rem;
+            width: 100%;
+            max-width: 420px;
+            box-shadow: var(--shadow-lg);
+            text-align: center;
+            border: 2px solid var(--color-turquesa);
+            position: relative;
+            overflow: hidden;
+        ">
+            {{-- Fondo decorativo --}}
+            <div style="
+                position: absolute; inset: 0;
+                background: radial-gradient(ellipse at 50% 0%, rgba(39,184,109,.12) 0%, transparent 70%);
+                pointer-events: none;
+            "></div>
+
+            {{-- Ícono animado --}}
+            <div style="
+                width: 80px; height: 80px;
+                background: var(--gradient-brand);
+                border-radius: 50%;
+                display: flex; align-items: center; justify-content: center;
+                font-size: 2.2rem;
+                margin: 0 auto 1.25rem;
+                box-shadow: 0 0 0 12px rgba(39,184,109,.12), 0 0 0 24px rgba(39,184,109,.06);
+                animation: pulse-brand 2s infinite;
+            ">✅</div>
+
+            <p style="font-size: 1.5rem; font-weight: 800; color: var(--color-text-primary); letter-spacing: -.5px; margin-bottom: .4rem;">
+                ¡Venta Registrada!
+            </p>
+            <p style="font-size: .9rem; color: var(--color-text-secondary); margin-bottom: 1.5rem;">
+                La transacción se completó correctamente
+            </p>
+
+            <div style="
+                background: var(--color-turquesa-muted);
+                border: 1.5px solid var(--color-turquesa-light);
+                border-radius: var(--radius-lg);
+                padding: 1rem 1.5rem;
+                margin-bottom: 1.75rem;
+                display: flex;
+                justify-content: space-around;
+            ">
+                <div>
+                    <p style="font-size: .75rem; font-weight: 600; color: var(--color-text-muted); text-transform: uppercase; letter-spacing: .06em; margin-bottom: .2rem;">Productos</p>
+                    <p style="font-size: 1.6rem; font-weight: 800; color: var(--color-text-primary);">{{ $ultimasCantItems }}</p>
+                </div>
+                <div style="width: 1px; background: var(--color-border);"></div>
+                <div>
+                    <p style="font-size: .75rem; font-weight: 600; color: var(--color-text-muted); text-transform: uppercase; letter-spacing: .06em; margin-bottom: .2rem;">Total</p>
+                    <p style="font-size: 1.6rem; font-weight: 800; color: var(--color-turquesa);">S/ {{ number_format($ultimoTotal, 2) }}</p>
+                </div>
+            </div>
+
+            <button wire:click="cerrarExito" class="btn btn-primary" style="width: 100%; justify-content: center; font-size: .95rem; padding: .75rem;">
+                🛒 Nueva Venta
+            </button>
+        </div>
+    </div>
     @endif
 
-    {{-- Buscador --}}
+    {{-- Buscador — auto-search sin botón --}}
     <div class="card" style="padding:1.25rem; margin-bottom:1.25rem;">
-        <p style="font-size:.8rem; font-weight:600; color:var(--color-text-muted); text-transform:uppercase; letter-spacing:.06em; margin-bottom:.6rem;">Escanear producto</p>
-        <div style="display:flex; gap:.65rem;">
+        <p style="font-size:.8rem; font-weight:600; color:var(--color-text-muted); text-transform:uppercase; letter-spacing:.06em; margin-bottom:.6rem;">
+            🔍 Escanear / Escribir código
+        </p>
+        <div style="position: relative;">
             <input
-                wire:model="codigoBusqueda"
-                wire:keydown.enter="buscarProducto"
-                placeholder="Código de barras..."
+                wire:model.live.debounce.400ms="codigoBusqueda"
+                placeholder="Código de barras — se busca automáticamente..."
                 class="input"
+                style="padding-right: 2.5rem;"
                 autofocus>
-            <button wire:click="buscarProducto" class="btn btn-primary">
-                🔍 Buscar
-            </button>
+            {{-- Indicador de carga --}}
+            <div wire:loading wire:target="updatedCodigoBusqueda"
+                 style="position:absolute; right:.75rem; top:50%; transform:translateY(-50%); width:18px; height:18px; border:2px solid var(--color-turquesa); border-top-color:transparent; border-radius:50%; animation: spin-slow .7s linear infinite;">
+            </div>
         </div>
         @if($error)
             <div class="alert alert-danger" style="margin-top:.75rem;">{{ $error }}</div>
         @endif
+        <p style="font-size:.75rem; color:var(--color-text-muted); margin-top:.5rem;">
+            💡 Escanea el código de barras o escríbelo — se agrega solo al carrito
+        </p>
     </div>
 
     {{-- Foto último producto --}}
@@ -38,6 +108,9 @@
     <div class="table-wrap animate-fade-in delay-100" style="margin-bottom:1.25rem;">
         <div style="padding:.85rem 1.25rem; border-bottom:1px solid var(--color-border);">
             <span style="font-weight:700; font-size:.95rem;">🛒 Carrito</span>
+            @if(count($carrito))
+                <span class="badge badge-info" style="margin-left:.5rem;">{{ count($carrito) }} ítems</span>
+            @endif
         </div>
         <table>
             <thead>
@@ -51,7 +124,7 @@
             </thead>
             <tbody>
                 @forelse($carrito as $i => $item)
-                <tr>
+                <tr class="animate-fade-in">
                     <td>
                         <div style="display:flex; align-items:center; gap:.6rem;">
                             @if($item['foto_path'])
@@ -74,7 +147,7 @@
                 <tr>
                     <td colspan="5" style="text-align:center; padding:2.5rem; color:var(--color-text-muted);">
                         <div style="font-size:2rem; margin-bottom:.5rem;">🛒</div>
-                        Carrito vacío
+                        Carrito vacío — escanea un producto para comenzar
                     </td>
                 </tr>
                 @endforelse
@@ -97,7 +170,7 @@
                 wire:confirm="¿Confirmar venta por S/ {{ number_format($total, 2) }}?"
                 class="btn btn-success"
                 style="font-size:1rem; padding:.7rem 2rem; animation: pulse-brand 2s infinite;">
-            ✅ Registrar Venta
+            ✅ Registrar Venta — S/ {{ number_format($total, 2) }}
         </button>
     </div>
     @endif

@@ -50,7 +50,7 @@
             <thead>
                 <tr>
                     <th>Fecha</th>
-                    <th class="text-right">Ventas</th>
+                    <th class="text-center">Ventas</th>
                     <th class="text-right">Total</th>
                 </tr>
             </thead>
@@ -58,7 +58,7 @@
                 @forelse($ventasDias as $dia)
                 <tr>
                     <td>{{ \Carbon\Carbon::parse($dia->fecha)->format('d/m/Y') }}</td>
-                    <td class="text-right">
+                    <td class="text-center">
                         <span class="badge badge-info">{{ $dia->cantidad_ventas }}</span>
                     </td>
                     <td class="text-right" style="font-weight:700; color:var(--color-turquesa);">
@@ -74,7 +74,7 @@
             <tfoot>
                 <tr style="background:var(--color-turquesa-muted); border-top:2px solid var(--color-border);">
                     <td style="font-weight:700; padding:.75rem 1rem;">Total</td>
-                    <td class="text-right" style="font-weight:700; padding:.75rem 1rem;">{{ collect($ventasDias)->sum('cantidad_ventas') }}</td>
+                    <td class="text-center" style="font-weight:700; padding:.75rem 1rem;">{{ collect($ventasDias)->sum('cantidad_ventas') }}</td>
                     <td class="text-right" style="font-weight:800; color:var(--color-turquesa); padding:.75rem 1rem;">S/ {{ number_format(collect($ventasDias)->sum('total_ventas'), 2) }}</td>
                 </tr>
             </tfoot>

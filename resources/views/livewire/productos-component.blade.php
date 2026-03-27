@@ -38,7 +38,7 @@
                             <div style="width:40px; height:40px; background:var(--color-turquesa-muted); border-radius:var(--radius-md); display:flex; align-items:center; justify-content:center; color:var(--color-text-muted); font-size:.7rem;">foto</div>
                         @endif
                     </td>
-                    <td style="font-family:monospace; font-size:.82rem; color:var(--color-text-secondary);">{{ $p->codigo_barras }}</td>
+                    <td style="font-family:monospace; font-size:.82rem; color:var(--color-celeste-dark);">{{ $p->codigo_barras }}</td>
                     <td style="font-weight:500;">{{ $p->nombre }}</td>
                     <td class="text-right" style="font-weight:600;">S/ {{ number_format($p->precio, 2) }}</td>
                     <td class="text-right">
@@ -66,6 +66,45 @@
                 @endforelse
             </tbody>
         </table>
+
+        {{-- Paginación --}}
+        @if($productos->hasPages())
+        <div style="padding:.85rem 1.25rem; border-top:1px solid var(--color-border); display:flex; align-items:center; justify-content:space-between;">
+            <span style="font-size:.8rem; color:var(--color-text-muted);">
+                Mostrando {{ $productos->firstItem() }}–{{ $productos->lastItem() }} de {{ $productos->total() }} productos
+            </span>
+            <div style="display:flex; gap:.35rem;">
+                {{-- Anterior --}}
+                @if($productos->onFirstPage())
+                    <span style="padding:.35rem .75rem; border-radius:var(--radius-sm); font-size:.82rem; color:var(--color-text-muted); border:1.5px solid var(--color-border); cursor:not-allowed; opacity:.5;">‹</span>
+                @else
+                    <button wire:click="previousPage" style="padding:.35rem .75rem; border-radius:var(--radius-sm); font-size:.82rem; color:var(--color-celeste-dark); border:1.5px solid var(--color-celeste-dark); background:var(--color-celeste-light); cursor:pointer; font-weight:600; transition:all var(--transition-fast);"
+                        onmouseover="this.style.background='var(--color-celeste-dark)'; this.style.color='#fff';"
+                        onmouseout="this.style.background='var(--color-celeste-light)'; this.style.color='var(--color-celeste-dark)';">‹</button>
+                @endif
+
+                {{-- Páginas --}}
+                @for($i = max(1, $productos->currentPage() - 2); $i <= min($productos->lastPage(), $productos->currentPage() + 2); $i++)
+                    @if($i == $productos->currentPage())
+                        <span style="padding:.35rem .75rem; border-radius:var(--radius-sm); font-size:.82rem; font-weight:700; background:var(--gradient-brand); color:#fff; border:1.5px solid transparent;">{{ $i }}</span>
+                    @else
+                        <button wire:click="gotoPage({{ $i }})" style="padding:.35rem .75rem; border-radius:var(--radius-sm); font-size:.82rem; color:var(--color-text-secondary); border:1.5px solid var(--color-border); background:var(--color-surface); cursor:pointer; transition:all var(--transition-fast);"
+                            onmouseover="this.style.borderColor='var(--color-celeste-dark)'; this.style.color='var(--color-celeste-dark)';"
+                            onmouseout="this.style.borderColor='var(--color-border)'; this.style.color='var(--color-text-secondary)';">{{ $i }}</button>
+                    @endif
+                @endfor
+
+                {{-- Siguiente --}}
+                @if($productos->hasMorePages())
+                    <button wire:click="nextPage" style="padding:.35rem .75rem; border-radius:var(--radius-sm); font-size:.82rem; color:var(--color-celeste-dark); border:1.5px solid var(--color-celeste-dark); background:var(--color-celeste-light); cursor:pointer; font-weight:600; transition:all var(--transition-fast);"
+                        onmouseover="this.style.background='var(--color-celeste-dark)'; this.style.color='#fff';"
+                        onmouseout="this.style.background='var(--color-celeste-light)'; this.style.color='var(--color-celeste-dark)';">›</button>
+                @else
+                    <span style="padding:.35rem .75rem; border-radius:var(--radius-sm); font-size:.82rem; color:var(--color-text-muted); border:1.5px solid var(--color-border); cursor:not-allowed; opacity:.5;">›</span>
+                @endif
+            </div>
+        </div>
+        @endif
     </div>
 
     {{-- Modal --}}
@@ -82,8 +121,18 @@
                 </div>
                 <div>
                     <label style="display:block; font-size:.82rem; font-weight:600; color:var(--color-text-secondary); margin-bottom:.3rem;">Código de barras</label>
-                    <input wire:model="codigo_barras" class="input" placeholder="Código">
+                    <input wire:model.live="codigo_barras" class="input" placeholder="Código">
                     @error('codigo_barras') <span style="color:var(--color-danger); font-size:.78rem;">{{ $message }}</span> @enderror
+                    @if($mensajeCodigo)
+                        <div style="
+                            margin-top:.4rem; padding:.5rem .75rem;
+                            background: var(--color-warning-light);
+                            border-left: 3px solid var(--color-warning);
+                            border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+                            font-size:.78rem; color: var(--color-warning);
+                            display: flex; align-items: center; gap: .4rem;
+                        ">{!! $mensajeCodigo !!}</div>
+                    @endif
                 </div>
                 <div style="display:flex; gap:.75rem;">
                     <div style="flex:1;">

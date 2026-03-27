@@ -8,30 +8,41 @@ use Illuminate\Support\Facades\DB;
 
 class VentasComponent extends Component
 {
-    public string $codigoBusqueda   = '';
+    public string $codigoBusqueda    = '';
     public ?array $productoEncontrado = null;
     public int    $cantidad = 1;
     public string $error    = '';
     public array  $carrito  = [];
+    public bool   $ventaExitosa = false;
 
-    public function buscarProducto(): void
+    // Para la confirmación visual
+    public float  $ultimoTotal = 0;
+    public int    $ultimasCantItems = 0;
+
+    // Auto-búsqueda con debounce: se dispara desde la vista con wire:model.live.debounce.400ms
+    public function updatedCodigoBusqueda(): void
     {
         $this->error = '';
         $this->productoEncontrado = null;
 
-        $p = Producto::where('codigo_barras', trim($this->codigoBusqueda))
+        $codigo = trim($this->codigoBusqueda);
+        if (strlen($codigo) < 2) return;
+
+        $p = Producto::where('codigo_barras', $codigo)
                      ->where('estado', 1)
                      ->first();
 
         if (!$p) {
-            $this->error = 'Producto no encontrado.';
+            // Solo mostrar error si parece un código completo (más de 5 chars)
+            if (strlen($codigo) >= 5) {
+                $this->error = 'Producto no encontrado.';
+                $this->codigoBusqueda = '';
+            }
             return;
         }
 
         $this->productoEncontrado = $p->toArray();
         $this->cantidad = 1;
-
-        // Auto-agregar al carrito
         $this->agregarAlCarrito();
     }
 
@@ -47,6 +58,7 @@ class VentasComponent extends Component
 
         if ($qty > $stockDisp) {
             $this->error = "Stock insuficiente. Disponible: {$stockDisp}";
+            $this->codigoBusqueda = '';
             return;
         }
 
@@ -86,6 +98,8 @@ class VentasComponent extends Component
         if (empty($this->carrito)) return;
 
         $estacion = request()->ip();
+        $this->ultimoTotal      = $this->totalCarrito();
+        $this->ultimasCantItems = array_sum(array_column($this->carrito, 'cantidad'));
 
         DB::transaction(function () use ($estacion) {
             $result  = DB::select('EXEC bodega.sp_registrar_venta @total = ?, @estacion = ?', [
@@ -105,7 +119,14 @@ class VentasComponent extends Component
         });
 
         $this->carrito = [];
-        session()->flash('ok', 'Venta registrada correctamente.');
+        $this->ventaExitosa = true;
+    }
+
+    public function cerrarExito(): void
+    {
+        $this->ventaExitosa = false;
+        $this->ultimoTotal = 0;
+        $this->ultimasCantItems = 0;
     }
 
     public function render()

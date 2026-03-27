@@ -8,6 +8,9 @@ use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Facades\Excel;
 use Barryvdh\DomPDF\Facade\Pdf;
 use App\Exports\HistorialVentasExport;
+use App\Exports\HistorialVentasResumenExport;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class HistorialVentasComponent extends Component
 {
@@ -15,6 +18,9 @@ class HistorialVentasComponent extends Component
     public string $fechaHasta      = '';
     public string $filtroProducto  = '';
     public ?int   $ventaDetalle    = null;
+
+    public bool   $mostrarModalExport = false;
+    public string $tipoExport         = '';
 
     public function mount(): void
     {
@@ -40,21 +46,44 @@ class HistorialVentasComponent extends Component
             ->get();
     }
 
-    public function exportarExcel()
+    public function abrirModalExport(string $tipo): void
     {
-        $ventas = $this->getVentas();
-        return Excel::download(new HistorialVentasExport($ventas), 'historial_ventas.xlsx');
+        $this->tipoExport = $tipo;
+        $this->mostrarModalExport = true;
     }
 
-    public function exportarPdf()
+    /**
+     * Livewire intercepta BinaryFileResponse y StreamedResponse
+     * y los envía como descarga — el tipo de retorno declarado
+     * resuelve el error "void function must not return a value".
+     */
+    public function exportar(string $modo): BinaryFileResponse|StreamedResponse
     {
-        $ventas    = $this->getVentas();
+        $ventas     = $this->getVentas();
         $fechaDesde = $this->fechaDesde;
         $fechaHasta = $this->fechaHasta;
-        $pdf = Pdf::loadView('exports.historial-pdf', compact('ventas', 'fechaDesde', 'fechaHasta'));
+        $this->mostrarModalExport = false;
+
+        if ($this->tipoExport === 'excel') {
+            $export   = $modo === 'detallado'
+                ? new HistorialVentasExport($ventas)
+                : new HistorialVentasResumenExport($ventas);
+            $filename = $modo === 'detallado'
+                ? 'historial_ventas_detallado.xlsx'
+                : 'historial_ventas_resumen.xlsx';
+
+            return Excel::download($export, $filename);
+        }
+
+        // PDF
+        $vista    = $modo === 'detallado' ? 'exports.historial-pdf' : 'exports.historial-pdf-resumen';
+        $filename = $modo === 'detallado' ? 'historial_ventas_detallado.pdf' : 'historial_ventas_resumen.pdf';
+
+        $pdf = Pdf::loadView($vista, compact('ventas', 'fechaDesde', 'fechaHasta'));
+
         return response()->streamDownload(
             fn() => print($pdf->output()),
-            'historial_ventas.pdf'
+            $filename
         );
     }
 

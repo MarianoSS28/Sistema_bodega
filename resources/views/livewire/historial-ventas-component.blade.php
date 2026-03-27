@@ -17,11 +17,73 @@
                 <input wire:model.live="filtroProducto" placeholder="Filtrar por producto..." class="input">
             </div>
             <div style="display:flex; gap:.5rem;">
-                <button wire:click="exportarExcel" class="btn btn-success">⬇ Excel</button>
-                <button wire:click="exportarPdf"   class="btn btn-danger">⬇ PDF</button>
+                <button wire:click="abrirModalExport('excel')" class="btn btn-success">⬇ Excel</button>
+                <button wire:click="abrirModalExport('pdf')"   class="btn btn-danger">⬇ PDF</button>
             </div>
         </div>
     </div>
+
+    {{-- Modal selector Detallado / Resumen --}}
+    @if($mostrarModalExport)
+    <div class="modal-backdrop" style="z-index:200;">
+        <div class="modal-box animate-scale-in" style="max-width:400px;">
+            <h2 class="modal-title" style="margin-bottom:.5rem;">
+                {{ $tipoExport === 'excel' ? '📊 Exportar Excel' : '📄 Exportar PDF' }}
+            </h2>
+            <p style="font-size:.85rem; color:var(--color-text-secondary); margin-bottom:1.5rem;">
+                Elige el tipo de exportación:
+            </p>
+
+            <div style="display:flex; flex-direction:column; gap:.75rem; margin-bottom:1.5rem;">
+                {{-- Opción Detallado --}}
+                <button wire:click="exportar('detallado')"
+                        style="
+                            display: flex; align-items: flex-start; gap: 1rem;
+                            padding: 1rem 1.25rem;
+                            border: 2px solid var(--color-turquesa);
+                            border-radius: var(--radius-lg);
+                            background: var(--color-turquesa-muted);
+                            cursor: pointer; text-align: left;
+                            transition: all var(--transition-base);
+                            width: 100%;
+                        "
+                        onmouseover="this.style.background='var(--color-turquesa-light)'; this.style.transform='translateY(-1px)';"
+                        onmouseout="this.style.background='var(--color-turquesa-muted)'; this.style.transform='';">
+                    <span style="font-size:1.5rem; flex-shrink:0;">📋</span>
+                    <div>
+                        <p style="font-weight:700; font-size:.9rem; color:var(--color-turquesa-dark); margin-bottom:.2rem;">Detallado</p>
+                        <p style="font-size:.8rem; color:var(--color-text-secondary); line-height:1.4;">Incluye cada venta con todos sus productos, cantidades, precios unitarios y subtotales.</p>
+                    </div>
+                </button>
+
+                {{-- Opción Resumen --}}
+                <button wire:click="exportar('resumen')"
+                        style="
+                            display: flex; align-items: flex-start; gap: 1rem;
+                            padding: 1rem 1.25rem;
+                            border: 2px solid var(--color-celeste-dark);
+                            border-radius: var(--radius-lg);
+                            background: var(--color-celeste-muted);
+                            cursor: pointer; text-align: left;
+                            transition: all var(--transition-base);
+                            width: 100%;
+                        "
+                        onmouseover="this.style.background='var(--color-celeste-light)'; this.style.transform='translateY(-1px)';"
+                        onmouseout="this.style.background='var(--color-celeste-muted)'; this.style.transform='';">
+                    <span style="font-size:1.5rem; flex-shrink:0;">📄</span>
+                    <div>
+                        <p style="font-weight:700; font-size:.9rem; color:var(--color-celeste-dark); margin-bottom:.2rem;">Resumen</p>
+                        <p style="font-size:.8rem; color:var(--color-text-secondary); line-height:1.4;">Solo la lista de ventas con fecha, total de productos y precio final.</p>
+                    </div>
+                </button>
+            </div>
+
+            <div style="display:flex; justify-content:flex-end;">
+                <button wire:click="$set('mostrarModalExport', false)" class="btn btn-secondary">Cancelar</button>
+            </div>
+        </div>
+    </div>
+    @endif
 
     {{-- Tabla --}}
     <div class="table-wrap animate-fade-in delay-100" style="margin-bottom:1.25rem;">
@@ -38,7 +100,7 @@
             <tbody>
                 @forelse($ventas as $v)
                 <tr style="{{ $ventaDetalle === $v->id ? 'background:var(--color-turquesa-muted);' : '' }}">
-                    <td style="font-family:monospace; font-size:.82rem; color:var(--color-text-secondary);">#{{ $v->id }}</td>
+                    <td style="font-family:monospace; font-size:.82rem; color:var(--color-celeste-dark);">#{{ $v->id }}</td>
                     <td>{{ \Carbon\Carbon::parse($v->fecha_creacion)->format('d/m/Y H:i') }}</td>
                     <td class="text-right" style="font-weight:700; color:var(--color-turquesa);">S/ {{ number_format($v->total, 2) }}</td>
                     <td class="text-center">

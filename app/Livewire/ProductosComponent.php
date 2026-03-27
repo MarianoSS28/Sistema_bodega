@@ -4,13 +4,14 @@ namespace App\Livewire;
 
 use Livewire\Component;
 use Livewire\WithFileUploads;
+use Livewire\WithPagination;
 use App\Models\Producto;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
 class ProductosComponent extends Component
 {
-    use WithFileUploads;
+    use WithFileUploads, WithPagination;
 
     public string $busqueda = '';
 
@@ -24,6 +25,9 @@ class ProductosComponent extends Component
 
     public bool $mostrarFormulario = false;
 
+    // Info de código duplicado
+    public ?string $mensajeCodigo = null;
+
     protected function rules(): array
     {
         return [
@@ -35,10 +39,32 @@ class ProductosComponent extends Component
         ];
     }
 
+    public function updatedBusqueda(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatedCodigoBarras(): void
+    {
+        $this->mensajeCodigo = null;
+        if (strlen($this->codigo_barras) >= 3) {
+            $query = Producto::where('codigo_barras', $this->codigo_barras)
+                ->where('estado', 1);
+            if ($this->editandoId) {
+                $query->where('id', '!=', $this->editandoId);
+            }
+            $existente = $query->first();
+            if ($existente) {
+                $this->mensajeCodigo = "⚠️ Código ya en uso por: <strong>{$existente->nombre}</strong>";
+            }
+        }
+    }
+
     public function abrirFormulario(?int $id = null): void
     {
         $this->resetErrorBag();
         $this->foto = null;
+        $this->mensajeCodigo = null;
 
         if ($id) {
             $p = Producto::findOrFail($id);
@@ -57,11 +83,21 @@ class ProductosComponent extends Component
     public function guardar(): void
     {
         $this->validate();
+
+        // Verificar duplicado de código antes de guardar
+        $query = Producto::where('codigo_barras', $this->codigo_barras)->where('estado', 1);
+        if ($this->editandoId) {
+            $query->where('id', '!=', $this->editandoId);
+        }
+        if ($query->exists()) {
+            $this->addError('codigo_barras', 'Este código de barras ya está registrado en otro producto.');
+            return;
+        }
+
         $estacion  = request()->ip();
         $foto_path = $this->fotoActual;
 
         if ($this->foto) {
-            // Borrar foto anterior si existe
             if ($this->fotoActual && Storage::disk('public')->exists($this->fotoActual)) {
                 Storage::disk('public')->delete($this->fotoActual);
             }
@@ -92,6 +128,7 @@ class ProductosComponent extends Component
         }
 
         $this->mostrarFormulario = false;
+        $this->mensajeCodigo = null;
         $this->reset(['editandoId', 'nombre', 'codigo_barras', 'precio', 'stock', 'foto', 'fotoActual']);
     }
 
@@ -112,8 +149,8 @@ class ProductosComponent extends Component
                 $q->where('nombre', 'like', "%{$this->busqueda}%")
                   ->orWhere('codigo_barras', 'like', "%{$this->busqueda}%");
             })
-            ->orderBy('nombre')
-            ->get();
+            ->orderBy('id','desc')
+            ->paginate(10);
 
         return view('livewire.productos-component', compact('productos'))
             ->layout('layouts.app');

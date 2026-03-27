@@ -28,7 +28,7 @@ class HistorialVentasExport implements FromCollection, WithHeadings, WithMapping
             \Carbon\Carbon::parse($row->fecha_creacion)->format('d/m/Y H:i'),
             $row->detalles->map(fn($d) => $d->producto->nombre ?? '—')->implode(', '),
             $row->detalles->sum('cantidad'),
-            '',
+            $row->detalles->sum('precio_unitario'),
             $row->detalles->sum('subtotal'),
             $row->total,
         ];

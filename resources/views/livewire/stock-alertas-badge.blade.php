@@ -1,4 +1,4 @@
-<div style="position:relative;" wire:poll.30s="cargar">
+<div style="position:relative;" wire:poll.10s="cargar">
     <button wire:click="toggleMostrar"
             style="position:relative; display:flex; align-items:center; gap:.3rem; color:rgba(255,255,255,.9); background:none; border:none; cursor:pointer; padding:.3rem; border-radius:var(--radius-md); transition:background var(--transition-fast);"
             onmouseover="this.style.background='rgba(255,255,255,.15)'"

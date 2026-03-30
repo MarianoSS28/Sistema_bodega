@@ -6,6 +6,7 @@ use Livewire\Component;
 use Livewire\WithFileUploads;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Auth;
 
 class VouchersComponent extends Component
 {
@@ -47,7 +48,7 @@ class VouchersComponent extends Component
 
     public function cargarVouchers(): void
     {
-        $this->vouchers = DB::select('EXEC bodega.sp_listar_vouchers @id_venta = NULL');
+        $this->vouchers = DB::select('EXEC bodega.sp_listar_vouchers @id_venta = NULL, @id_comercio = ?', [Auth::user()->id_comercio]);
     }
 
     public function subirVoucher(): void
@@ -55,7 +56,7 @@ class VouchersComponent extends Component
         $this->validate();
 
         // Verificar que la venta existe
-        $venta = DB::select('SELECT id FROM bodega.ventas WHERE id = ? AND estado = 1', [$this->idVenta]);
+        $venta = DB::select('SELECT id FROM bodega.ventas WHERE id = ? AND estado = 1 AND id_comercio = ?', [$this->idVenta, Auth::user()->id_comercio]);
         if (empty($venta)) {
             $this->addError('idVenta', 'La venta no existe.');
             return;

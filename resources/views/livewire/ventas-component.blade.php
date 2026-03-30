@@ -173,12 +173,7 @@
 
     @if(count($carrito))
     <div style="display:flex; justify-content:flex-end;">
-        <button wire:click="registrarVenta"
-                wire:confirm="¿Confirmar venta por S/ {{ number_format($total, 2) }}?"
-                class="btn btn-success"
-                style="font-size:1rem; padding:.7rem 2rem; animation: pulse-brand 2s infinite;">
-            ✅ Registrar Venta — S/ {{ number_format($total, 2) }}
-        </button>
+        <button wire:click="abrirCobro">
     </div>
     @endif
 

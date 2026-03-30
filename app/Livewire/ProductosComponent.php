@@ -8,6 +8,7 @@ use Livewire\WithPagination;
 use App\Models\Producto;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Auth;
 
 class ProductosComponent extends Component
 {
@@ -49,7 +50,8 @@ class ProductosComponent extends Component
         $this->mensajeCodigo = null;
         if (strlen($this->codigo_barras) >= 3) {
             $query = Producto::where('codigo_barras', $this->codigo_barras)
-                ->where('estado', 1);
+                ->where('estado', 1)
+                ->where('id_comercio', Auth::user()->id_comercio);
             if ($this->editandoId) {
                 $query->where('id', '!=', $this->editandoId);
             }
@@ -116,13 +118,14 @@ class ProductosComponent extends Component
             ]);
             session()->flash('ok', 'Producto actualizado.');
         } else {
-            DB::statement('EXEC bodega.sp_InsertarProducto ?, ?, ?, ?, ?, ?', [
+            DB::statement('EXEC bodega.sp_InsertarProducto ?, ?, ?, ?, ?, ?, ?', [
                 $this->nombre,
                 $this->codigo_barras,
                 $this->precio,
                 $this->stock,
                 $foto_path,
                 $estacion,
+                Auth::user()->id_comercio,
             ]);
             session()->flash('ok', 'Producto creado.');
         }
@@ -145,6 +148,7 @@ class ProductosComponent extends Component
     public function render()
     {
         $productos = Producto::where('estado', 1)
+            ->where('id_comercio', Auth::user()->id_comercio)
             ->where(function ($q) {
                 $q->where('nombre', 'like', "%{$this->busqueda}%")
                   ->orWhere('codigo_barras', 'like', "%{$this->busqueda}%");

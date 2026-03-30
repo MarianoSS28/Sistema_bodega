@@ -4,7 +4,7 @@ namespace App\Livewire;
 
 use Livewire\Component;
 use App\Models\Venta;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 use Maatwebsite\Excel\Facades\Excel;
 use Barryvdh\DomPDF\Facade\Pdf;
 use App\Exports\HistorialVentasExport;
@@ -37,6 +37,7 @@ class HistorialVentasComponent extends Component
     {
         return Venta::with('detalles.producto')
             ->where('estado', 1)
+            ->where('id_comercio', Auth::user()->id_comercio)
             ->when($this->fechaDesde, fn($q) => $q->whereDate('fecha_creacion', '>=', $this->fechaDesde))
             ->when($this->fechaHasta, fn($q) => $q->whereDate('fecha_creacion', '<=', $this->fechaHasta))
             ->when($this->filtroProducto, fn($q) => $q->whereHas('detalles.producto', fn($q2) =>

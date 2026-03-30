@@ -18,6 +18,7 @@ class Producto extends Model
         'fecha_creacion',
         'estacion_modificacion',
         'fecha_modificacion',
+        'id_comercio',
     ];
 
     public $timestamps = false;

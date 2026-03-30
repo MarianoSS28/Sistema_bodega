@@ -2,6 +2,7 @@
 
 namespace App\Livewire;
 
+use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 use Illuminate\Support\Facades\DB;
 
@@ -17,10 +18,10 @@ class DashboardComponent extends Component
 
     public function cargar(): void
     {
-        $result = DB::select('EXEC bodega.sp_dashboard_resumen');
+        $idComercio = Auth::user()->id_comercio;
+        $result = DB::select('EXEC bodega.sp_dashboard_resumen @id_comercio = ?', [$idComercio]);
         $this->resumen = $result[0] ?? null;
-
-        $this->ventasDias = DB::select('EXEC bodega.sp_ventas_ultimos_dias @dias = 7');
+        $this->ventasDias = DB::select('EXEC bodega.sp_ventas_ultimos_dias @dias = 7, @id_comercio = ?', [$idComercio]);
     }
 
     public function render()

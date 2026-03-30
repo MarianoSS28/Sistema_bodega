@@ -5,6 +5,7 @@ namespace App\Livewire;
 use Livewire\Component;
 use App\Models\Producto;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 
 class VentasComponent extends Component
 {
@@ -19,7 +20,8 @@ class VentasComponent extends Component
     public string $efectivoRecibido  = '';
     public array  $heladasCarrito    = []; 
     public float  $ultimoVuelto     = 0;
-    public string $ultimoMetodoPago = 'efectivo';   
+    public string $ultimoMetodoPago = 'efectivo';  
+    public string $bufferTeclas = ''; 
 
     // Para la confirmación visual
     public float  $ultimoTotal = 0;
@@ -36,6 +38,7 @@ class VentasComponent extends Component
 
         $p = Producto::where('codigo_barras', $codigo)
                      ->where('estado', 1)
+                     ->where('id_comercio', Auth::user()->id_comercio)
                      ->first();
 
         if (!$p) {
@@ -50,6 +53,12 @@ class VentasComponent extends Component
         $this->productoEncontrado = $p->toArray();
         $this->cantidad = 1;
         $this->agregarAlCarrito();
+    }
+
+    public function updatedBufferTeclas(): void
+    {
+        // Se llama con wire:model.live sin debounce — el JS acumula y envía
+        // Ver cambio en la vista
     }
 
     public function agregarAlCarrito(): void
@@ -129,8 +138,8 @@ class VentasComponent extends Component
         $efectivo          = $this->metodoPago === 'efectivo' ? (float)$this->efectivoRecibido : null;
 
         DB::transaction(function () use ($estacion, $vuelto, $efectivo) {
-            $result  = DB::select('EXEC bodega.sp_registrar_venta @total = ?, @estacion = ?, @metodo_pago = ?, @efectivo_recibido = ?, @vuelto = ?', [
-                $this->totalCarrito(), $estacion, $this->metodoPago, $efectivo, $vuelto ?: null
+            $result = DB::select('EXEC bodega.sp_registrar_venta @total = ?, @estacion = ?, @metodo_pago = ?, @efectivo_recibido = ?, @vuelto = ?, @id_comercio=?', [
+                $this->totalCarrito(), $estacion, $this->metodoPago, $efectivo, $vuelto ?: null, Auth::user()->id_comercio,
             ]);
             $idVenta = $result[0]->id_venta;
 

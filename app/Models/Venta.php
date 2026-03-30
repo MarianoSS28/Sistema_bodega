@@ -8,7 +8,7 @@ class Venta extends Model
 {
     protected $table = 'bodega.ventas';
 
-    protected $fillable = ['total', 'estado', 'estacion_creacion', 'estacion_modificacion'];
+    protected $fillable = ['total', 'estado', 'estacion_creacion', 'estacion_modificacion','metodo_pago', 'efectivo_recibido', 'vuelto'];
 
     public $timestamps = false;
 

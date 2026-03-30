@@ -19,15 +19,23 @@
             Bodega
         </span>
 
-        <a href="{{ route('dashboard') }}"  class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}">Dashboard</a>
-        <a href="{{ route('ventas') }}"     class="nav-link {{ request()->routeIs('ventas')    ? 'active' : '' }}">Ventas</a>
-        <a href="{{ route('productos') }}"  class="nav-link {{ request()->routeIs('productos') ? 'active' : '' }}">Productos</a>
-        <a href="{{ route('historial') }}"  class="nav-link {{ request()->routeIs('historial') ? 'active' : '' }}">Historial</a>
-        <a href="{{ route('vouchers') }}"   class="nav-link {{ request()->routeIs('vouchers')  ? 'active' : '' }}">Vouchers</a>
+        @foreach(Auth::user()->menus()->orderBy('id')->get() as $menu)
+        <a href="{{ route($menu->ruta) }}"
+        class="nav-link {{ request()->routeIs($menu->ruta) ? 'active' : '' }}">
+            {{ $menu->icono }} {{ $menu->nombre }}
+        </a>
+        @endforeach
 
         <div style="margin-left:auto">
             <livewire:stock-alertas-badge />
         </div>
+
+        <form method="POST" action="{{ route('logout') }}" style="margin-left:.5rem;">
+            @csrf
+            <button type="submit" class="nav-link" style="background:rgba(255,255,255,.15); cursor:pointer; border:none;">
+                👤 {{ Auth::user()->nombre_completo }} &nbsp;·&nbsp; Salir
+            </button>
+        </form>
     </nav>
 
     <main style="padding: 1.5rem; max-width: 1400px; margin: 0 auto;">

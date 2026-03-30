@@ -14,6 +14,12 @@ class VentasComponent extends Component
     public string $error    = '';
     public array  $carrito  = [];
     public bool   $ventaExitosa = false;
+    public bool   $mostrarModalCobro = false;
+    public string $metodoPago        = 'efectivo';
+    public string $efectivoRecibido  = '';
+    public array  $heladasCarrito    = []; 
+    public float  $ultimoVuelto     = 0;
+    public string $ultimoMetodoPago = 'efectivo';   
 
     // Para la confirmación visual
     public float  $ultimoTotal = 0;
@@ -93,33 +99,55 @@ class VentasComponent extends Component
         return collect($this->carrito)->sum('subtotal');
     }
 
+    public function abrirCobro(): void
+    {
+        if (empty($this->carrito)) return;
+        // Inicializar heladas en false para cada ítem
+        $this->heladasCarrito = array_fill(0, count($this->carrito), false);
+        $this->metodoPago = 'efectivo';
+        $this->efectivoRecibido = '';
+        $this->mostrarModalCobro = true;
+    }
+
+    public function calcularVuelto(): float
+    {
+        if ($this->metodoPago !== 'efectivo' || $this->efectivoRecibido === '') return 0;
+        return max(0, (float) $this->efectivoRecibido - $this->totalCarrito());
+    }
+
     public function registrarVenta(): void
     {
         if (empty($this->carrito)) return;
+        if ($this->metodoPago === 'efectivo' && (float)$this->efectivoRecibido < $this->totalCarrito()) {
+            return; // No alcanza
+        }
 
-        $estacion = request()->ip();
+        $estacion          = request()->ip();
         $this->ultimoTotal      = $this->totalCarrito();
         $this->ultimasCantItems = array_sum(array_column($this->carrito, 'cantidad'));
+        $vuelto            = $this->calcularVuelto();
+        $efectivo          = $this->metodoPago === 'efectivo' ? (float)$this->efectivoRecibido : null;
 
-        DB::transaction(function () use ($estacion) {
-            $result  = DB::select('EXEC bodega.sp_registrar_venta @total = ?, @estacion = ?', [
-                $this->totalCarrito(), $estacion
+        DB::transaction(function () use ($estacion, $vuelto, $efectivo) {
+            $result  = DB::select('EXEC bodega.sp_registrar_venta @total = ?, @estacion = ?, @metodo_pago = ?, @efectivo_recibido = ?, @vuelto = ?', [
+                $this->totalCarrito(), $estacion, $this->metodoPago, $efectivo, $vuelto ?: null
             ]);
             $idVenta = $result[0]->id_venta;
 
-            foreach ($this->carrito as $item) {
-                DB::statement('EXEC bodega.sp_registrar_detalle @id_venta = ?, @id_producto = ?, @cantidad = ?, @precio = ?, @estacion = ?', [
-                    $idVenta,
-                    $item['id_producto'],
-                    $item['cantidad'],
-                    $item['precio_unitario'],
-                    $estacion,
+            foreach ($this->carrito as $i => $item) {
+                $esHelada = $this->heladasCarrito[$i] ?? false;
+                DB::statement('EXEC bodega.sp_registrar_detalle @id_venta = ?, @id_producto = ?, @cantidad = ?, @precio = ?, @estacion = ?, @es_helada = ?', [
+                    $idVenta, $item['id_producto'], $item['cantidad'], $item['precio_unitario'], $estacion, $esHelada ? 1 : 0,
                 ]);
             }
         });
 
-        $this->carrito = [];
-        $this->ventaExitosa = true;
+        $this->ultimoVuelto    = $vuelto;
+        $this->ultimoMetodoPago = $this->metodoPago;
+        $this->carrito         = [];
+        $this->heladasCarrito  = [];
+        $this->mostrarModalCobro = false;
+        $this->ventaExitosa    = true;
     }
 
     public function cerrarExito(): void

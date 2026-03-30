@@ -8,7 +8,7 @@ class DetalleVenta extends Model
 {
     protected $table = 'bodega.detalle_ventas';
 
-    protected $fillable = ['id_venta', 'id_producto', 'cantidad', 'precio_unitario', 'subtotal', 'estado', 'estacion_creacion', 'estacion_modificacion'];
+    protected $fillable = ['id_venta', 'id_producto', 'cantidad', 'precio_unitario', 'subtotal', 'estado', 'estacion_creacion', 'estacion_modificacion','es_helada'];
 
     public $timestamps = false;
 

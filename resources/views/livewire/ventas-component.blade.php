@@ -60,6 +60,13 @@
                     <p style="font-size: .75rem; font-weight: 600; color: var(--color-text-muted); text-transform: uppercase; letter-spacing: .06em; margin-bottom: .2rem;">Total</p>
                     <p style="font-size: 1.6rem; font-weight: 800; color: var(--color-turquesa);">S/ {{ number_format($ultimoTotal, 2) }}</p>
                 </div>
+                @if($ultimoMetodoPago === 'efectivo' && $ultimoVuelto > 0)
+                <div style="width:1px; background:var(--color-border);"></div>
+                <div>
+                    <p style="font-size:.75rem; font-weight:600; color:var(--color-text-muted); text-transform:uppercase; letter-spacing:.06em; margin-bottom:.2rem;">Vuelto</p>
+                    <p style="font-size:1.6rem; font-weight:800; color:var(--color-celeste-dark);">S/ {{ number_format($ultimoVuelto, 2) }}</p>
+                </div>
+                @endif
             </div>
 
             <button wire:click="cerrarExito" class="btn btn-primary" style="width: 100%; justify-content: center; font-size: .95rem; padding: .75rem;">
@@ -172,6 +179,86 @@
                 style="font-size:1rem; padding:.7rem 2rem; animation: pulse-brand 2s infinite;">
             ✅ Registrar Venta — S/ {{ number_format($total, 2) }}
         </button>
+    </div>
+    @endif
+
+    @if($mostrarModalCobro)
+    <div class="modal-backdrop" style="z-index:999;">
+        <div class="modal-box animate-scale-in" style="max-width:520px; width:100%;">
+            <h2 class="modal-title">💳 Cobrar Venta — S/ {{ number_format($total, 2) }}</h2>
+
+            {{-- Listado con check helada --}}
+            <div style="margin-bottom:1.25rem; max-height:220px; overflow-y:auto;">
+                <p style="font-size:.78rem; font-weight:600; color:var(--color-text-muted); text-transform:uppercase; letter-spacing:.05em; margin-bottom:.5rem;">¿Algún producto va helado? ❄️</p>
+                @foreach($carrito as $i => $item)
+                <label style="display:flex; align-items:center; gap:.75rem; padding:.45rem .6rem; border-radius:var(--radius-md); cursor:pointer; transition:background var(--transition-fast);"
+                    onmouseover="this.style.background='var(--color-turquesa-muted)'" onmouseout="this.style.background=''">
+                    <input type="checkbox" wire:model="heladasCarrito.{{ $i }}"
+                        style="width:16px; height:16px; accent-color:var(--color-celeste-dark);">
+                    <span style="flex:1; font-size:.875rem; font-weight:500;">{{ $item['nombre'] }}</span>
+                    <span style="font-size:.8rem; color:var(--color-turquesa);">x{{ $item['cantidad'] }} — S/ {{ number_format($item['subtotal'], 2) }}</span>
+                    @if($heladasCarrito[$i] ?? false)
+                        <span style="font-size:.85rem;">❄️</span>
+                    @endif
+                </label>
+                @endforeach
+            </div>
+
+            {{-- Método de pago --}}
+            <p style="font-size:.78rem; font-weight:600; color:var(--color-text-muted); text-transform:uppercase; letter-spacing:.05em; margin-bottom:.5rem;">Método de pago</p>
+            <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:.5rem; margin-bottom:1rem;">
+                @foreach(['efectivo' => '💵 Efectivo', 'yape' => '📱 Yape', 'plin' => '💜 Plin', 'otro' => '💳 Otro'] as $val => $label)
+                <button wire:click="$set('metodoPago', '{{ $val }}')"
+                        style="padding:.55rem .4rem; border-radius:var(--radius-md); font-size:.8rem; font-weight:600; cursor:pointer; border:2px solid {{ $metodoPago === $val ? 'var(--color-turquesa)' : 'var(--color-border)' }}; background:{{ $metodoPago === $val ? 'var(--color-turquesa-muted)' : 'var(--color-surface)' }}; color:{{ $metodoPago === $val ? 'var(--color-turquesa-dark)' : 'var(--color-text-secondary)' }}; transition:all var(--transition-fast);">
+                    {{ $label }}
+                </button>
+                @endforeach
+            </div>
+
+            {{-- QR si es Yape o Plin --}}
+            @if(in_array($metodoPago, ['yape','plin']))
+            @php $comercio = \Illuminate\Support\Facades\DB::table('bodega.comercio')->where('estado',1)->first(); @endphp
+            @if($comercio)
+            <div style="text-align:center; margin-bottom:1rem;">
+                @if($metodoPago === 'yape' && $comercio->yape_qr)
+                    <img src="{{ Storage::url($comercio->yape_qr) }}" style="max-height:160px; border-radius:var(--radius-md); border:2px solid var(--color-turquesa);">
+                    <p style="font-size:.78rem; color:var(--color-text-muted); margin-top:.4rem;">Escanea el QR de Yape</p>
+                @elseif($metodoPago === 'plin' && $comercio->plin_qr)
+                    <img src="{{ Storage::url($comercio->plin_qr) }}" style="max-height:160px; border-radius:var(--radius-md); border:2px solid #7c3aed;">
+                    <p style="font-size:.78rem; color:var(--color-text-muted); margin-top:.4rem;">Escanea el QR de Plin</p>
+                @endif
+            </div>
+            @endif
+            @endif
+
+            {{-- Efectivo recibido + vuelto --}}
+            @if($metodoPago === 'efectivo')
+            <div style="display:flex; gap:.75rem; align-items:flex-end; margin-bottom:1rem;">
+                <div style="flex:1;">
+                    <label style="display:block; font-size:.82rem; font-weight:600; color:var(--color-text-secondary); margin-bottom:.3rem;">Efectivo recibido (S/)</label>
+                    <input wire:model.live="efectivoRecibido" type="number" step="0.10" min="{{ $total }}" class="input" placeholder="0.00" style="font-size:1.1rem; font-weight:700;">
+                </div>
+                <div style="flex:1; background:var(--color-turquesa-muted); border-radius:var(--radius-md); padding:.75rem; text-align:center;">
+                    <p style="font-size:.75rem; font-weight:600; color:var(--color-text-muted); margin-bottom:.2rem;">VUELTO</p>
+                    <p style="font-size:1.6rem; font-weight:800; color:{{ $this->calcularVuelto() >= 0 ? 'var(--color-turquesa)' : 'var(--color-danger)' }};">
+                        S/ {{ number_format($this->calcularVuelto(), 2) }}
+                    </p>
+                </div>
+            </div>
+            @if($efectivoRecibido !== '' && (float)$efectivoRecibido < $total)
+                <div class="alert alert-danger" style="margin-bottom:.75rem;">⚠️ El efectivo no cubre el total.</div>
+            @endif
+            @endif
+
+            <div style="display:flex; justify-content:flex-end; gap:.65rem; margin-top:.5rem;">
+                <button wire:click="$set('mostrarModalCobro', false)" class="btn btn-secondary">Cancelar</button>
+                <button wire:click="registrarVenta"
+                        @if($metodoPago === 'efectivo' && ($efectivoRecibido === '' || (float)$efectivoRecibido < $total)) disabled @endif
+                        class="btn btn-success" style="opacity: {{ $metodoPago === 'efectivo' && ($efectivoRecibido === '' || (float)$efectivoRecibido < $total) ? '.5' : '1' }};">
+                    ✅ Confirmar Venta
+                </button>
+            </div>
+        </div>
     </div>
     @endif
 </div>

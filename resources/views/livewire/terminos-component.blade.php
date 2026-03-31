@@ -72,6 +72,7 @@
 
     {{-- Modal edicion --}}
     @if($mostrarFormulario)
+    @teleport('body')
     <div class="modal-backdrop">
         <div class="modal-box animate-scale-in" style="max-width:680px; width:100%;">
             <h2 class="modal-title">{{ $editandoId ? 'Editar' : 'Nueva' }} Version de Terminos</h2>
@@ -104,10 +105,12 @@
             </div>
         </div>
     </div>
+    @endteleport
     @endif
 
     {{-- Modal vista previa --}}
     @if($mostrarVista && $vistaDetalle)
+    @teleport('body')
     <div class="modal-backdrop" style="z-index:200;" wire:click.self="cerrarVista">
         <div class="modal-box animate-scale-in" style="max-width:700px; width:100%; max-height:80vh; overflow-y:auto;">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
@@ -129,5 +132,6 @@
             </p>
         </div>
     </div>
+    @endteleport
     @endif
 </div>

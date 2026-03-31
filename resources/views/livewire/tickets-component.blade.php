@@ -204,6 +204,7 @@
 
     {{-- Modal nuevo ticket --}}
     @if($mostrarFormulario)
+    @teleport('body')
     <div class="modal-backdrop">
         <div class="modal-box animate-scale-in" style="max-width:520px;">
             <h2 class="modal-title">Nuevo Ticket de Soporte</h2>
@@ -240,5 +241,6 @@
             </div>
         </div>
     </div>
+    @endteleport
     @endif
 </div>

@@ -109,6 +109,7 @@
 
     {{-- Modal --}}
     @if($mostrarFormulario)
+    @teleport('body')
     <div class="modal-backdrop">
         <div class="modal-box animate-scale-in">
             <h2 class="modal-title">{{ $editandoId ? '✏️ Editar' : '➕ Nuevo' }} Producto</h2>
@@ -165,5 +166,6 @@
             </div>
         </div>
     </div>
+    @endteleport
     @endif
 </div>

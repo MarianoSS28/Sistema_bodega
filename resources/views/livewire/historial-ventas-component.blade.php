@@ -25,6 +25,7 @@
 
     {{-- Modal selector Detallado / Resumen --}}
     @if($mostrarModalExport)
+    @teleport('body')
     <div class="modal-backdrop" style="z-index:200;">
         <div class="modal-box animate-scale-in" style="max-width:400px;">
             <h2 class="modal-title" style="margin-bottom:.5rem;">
@@ -83,6 +84,7 @@
             </div>
         </div>
     </div>
+    @endteleport
     @endif
 
     {{-- Tabla --}}

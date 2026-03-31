@@ -7,6 +7,7 @@
 
     {{-- Visor de foto ampliada --}}
     @if($fotoAmpliada)
+    @teleport('body')
     <div class="modal-backdrop" style="z-index:500; cursor:zoom-out;" wire:click="cerrarFoto">
         <div style="position:relative; max-width:90vw; max-height:90vh;" onclick="event.stopPropagation()">
             <img src="{{ Storage::url($fotoAmpliada) }}"
@@ -24,10 +25,12 @@
                     ">✕</button>
         </div>
     </div>
+    @endteleport
     @endif
 
     {{-- Modal de edición --}}
     @if($editandoId)
+    @teleport('body')
     <div class="modal-backdrop" style="z-index:100;">
         <div class="modal-box animate-scale-in">
             <h2 class="modal-title">✏️ Editar Voucher</h2>
@@ -56,6 +59,7 @@
             </div>
         </div>
     </div>
+    @endteleport
     @endif
 
     {{-- Formulario subir voucher --}}

@@ -11,7 +11,7 @@ class CheckMenuAcceso
     {
         $ruta = $request->route()->getName();
         // Rutas que no requieren validación de menú
-        if (in_array($ruta, ['dashboard', 'login'])) {
+        if (in_array($ruta, ['dashboard', 'login', 'mantenimiento'])) {
             return $next($request);
         }
 

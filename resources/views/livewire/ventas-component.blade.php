@@ -14,6 +14,7 @@
 
     {{-- ✅ Modal venta exitosa --}}
     @if($ventaExitosa)
+    @teleport('body')
     <div class="modal-backdrop" style="z-index:999;">
         <div class="animate-scale-in" style="
             background: var(--color-surface); border-radius: var(--radius-xl);
@@ -65,6 +66,7 @@
             </button>
         </div>
     </div>
+    @endteleport
     @endif
 
     {{-- Zona de escaneo --}}
@@ -213,6 +215,7 @@
 
     {{-- Modal cobro --}}
     @if($mostrarModalCobro)
+    @teleport('body')
     <div class="modal-backdrop" style="z-index:999;">
         <div class="modal-box animate-scale-in" style="max-width:520px; width:100%;">
             <h2 class="modal-title">Cobrar Venta — S/ {{ number_format($total, 2) }}</h2>
@@ -318,6 +321,7 @@
             </div>
         </div>
     </div>
+    @endteleport
     @endif
 </div>
 

@@ -44,6 +44,7 @@
 
     {{-- Modal --}}
     @if($mostrarFormulario)
+    @teleport('body')
     <div class="modal-backdrop">
         <div class="modal-box animate-scale-in" style="max-width:380px;">
             <h2 class="modal-title">{{ $editandoId ? 'Editar' : 'Nuevo' }} Rol</h2>
@@ -60,5 +61,6 @@
             </div>
         </div>
     </div>
+    @endteleport
     @endif
 </div>

@@ -22,4 +22,10 @@
             Ingresar
         </button>
     </div>
+
+    <p style="text-align:center; font-size:.75rem; color:var(--color-text-muted); margin-top:1rem;">
+        Al ingresar aceptas nuestros 
+        <a href="{{ route('terminos.publico') }}" target="_blank" 
+        style="color:var(--color-turquesa); font-weight:600;">Términos y Condiciones</a>
+    </p>
 </div>

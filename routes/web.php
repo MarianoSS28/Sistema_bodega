@@ -26,6 +26,12 @@ Route::post('/logout', function () {
     return redirect()->route('login');
 })->name('logout');
 
+Route::get('/terminos-condiciones', function () {
+    $termino = \App\Models\TerminosCondiciones::where('estado', 1)
+        ->orderByDesc('id')->first();
+    return view('terminos-publico', compact('termino'));
+})->name('terminos.publico');
+
 Route::middleware(['auth', 'menu.acceso'])->group(function () {
     Route::get('/ventas'                ,   VentasComponent::class)->name('ventas');
     Route::get('/productos'             ,   ProductosComponent::class)->name('productos');

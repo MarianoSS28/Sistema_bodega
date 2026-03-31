@@ -87,7 +87,7 @@ class ProductosComponent extends Component
         $this->validate();
 
         // Verificar duplicado de código antes de guardar
-        $query = Producto::where('codigo_barras', $this->codigo_barras)->where('estado', 1);
+        $query = Producto::where('codigo_barras', $this->codigo_barras)->where('estado', 1)->where('id_comercio', Auth::user()->id_comercio);
         if ($this->editandoId) {
             $query->where('id', '!=', $this->editandoId);
         }

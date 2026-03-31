@@ -23,7 +23,7 @@ class ComercioComponent extends Component
 
     public function mount(): void
     {
-        $comercio = Comercio::where('estado', 1)->first();
+        $comercio = Comercio::where('estado', 1)->where('id', Auth::user()->id_comercio)->first();
         if ($comercio) {
             $this->id           = $comercio->id;
             $this->nombre       = $comercio->nombre;

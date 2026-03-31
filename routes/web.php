@@ -11,7 +11,13 @@ use App\Livewire\LoginComponent;
 use App\Livewire\UsuariosComponent;
 use App\Livewire\ComercioComponent;
 use App\Livewire\MenusComponent;
+use App\Livewire\ComerciosAdminComponent;
+use App\Livewire\RolesComponent;
+use App\Livewire\TerminosComponent;
+use App\Livewire\TicketsComponent;
+use App\Livewire\MantenimientoAdminComponent;
 
+Route::get('/mantenimiento', fn() => view('mantenimiento'))->name('mantenimiento');
 Route::get('/login', LoginComponent::class)->name('login')->middleware('guest');
 Route::post('/logout', function () {
     Auth::logout();
@@ -20,18 +26,21 @@ Route::post('/logout', function () {
     return redirect()->route('login');
 })->name('logout');
 
-// Envolver las rutas existentes con auth:
 Route::middleware(['auth', 'menu.acceso'])->group(function () {
-    Route::get('/ventas'    ,   VentasComponent::class)->name('ventas');
-    Route::get('/productos' ,   ProductosComponent::class)->name('productos');
-    Route::get('/historial' ,   HistorialVentasComponent::class)->name('historial');
-    Route::get('/vouchers'  ,   VouchersComponent::class)->name('vouchers');
-    Route::get('/usuarios'  ,   UsuariosComponent::class)->name('usuarios');
-    Route::get('/comercio'  ,   ComercioComponent::class)->name('comercio');
-    Route::get('/menus'     ,   MenusComponent::class)->name('menus');
+    Route::get('/ventas'                ,   VentasComponent::class)->name('ventas');
+    Route::get('/productos'             ,   ProductosComponent::class)->name('productos');
+    Route::get('/historial'             ,   HistorialVentasComponent::class)->name('historial');
+    Route::get('/vouchers'              ,   VouchersComponent::class)->name('vouchers');
+    Route::get('/usuarios'              ,   UsuariosComponent::class)->name('usuarios');
+    Route::get('/comercio'              ,   ComercioComponent::class)->name('comercio');
+    Route::get('/menus'                 ,   MenusComponent::class)->name('menus');
+    Route::get('/comercios-admin'       ,   ComerciosAdminComponent::class)->name('comercios-admin');
+    Route::get('/roles'                 ,   RolesComponent::class)->name('roles');
+    Route::get('/terminos'              ,   TerminosComponent::class)->name('terminos');
+    Route::get('/tickets'               ,   TicketsComponent::class)->name('tickets');
+    Route::get('/mantenimiento-admin'   ,   MantenimientoAdminComponent::class)->name('mantenimiento-admin');
 });
 
-// Dashboard sin validación de menú (todos los autenticados lo ven)
 Route::middleware('auth')->group(function () {
     Route::get('/', fn() => redirect()->route('dashboard'));
     Route::get('/dashboard', DashboardComponent::class)->name('dashboard');

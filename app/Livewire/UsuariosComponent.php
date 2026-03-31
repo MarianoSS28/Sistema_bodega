@@ -18,14 +18,18 @@ class UsuariosComponent extends Component
     public string $busqueda = '';
 
     // Form
-    public ?int   $editandoId      = null;
-    public string $nombre_completo = '';
-    public string $dni             = '';
-    public string $password        = '';
-    public string $id_rol          = '';
-    public int    $id_comercio     = 0;
+    public ?int   $editandoId        = null;
+    public string $nombre_completo   = '';
+    public string $dni               = '';
+    public string $password          = '';
+    public string $id_rol            = '';
+    public int    $id_comercio       = 0;
     public array  $menusSeleccionados = [];
     public bool   $mostrarFormulario  = false;
+
+    // Bloqueo
+    public int    $bloqueado       = 0;
+    public string $motivo_bloqueo  = '';
 
     public function esAdmin(): bool
     {
@@ -49,19 +53,20 @@ class UsuariosComponent extends Component
 
         if ($id) {
             $u = Usuario::findOrFail($id);
-            $this->nombre_completo = $u->nombre_completo;
-            $this->dni             = $u->dni;
-            $this->password        = '';
-            $this->id_rol          = (string) $u->id_rol;
-            $this->id_comercio     = $u->id_comercio;
+            $this->nombre_completo  = $u->nombre_completo;
+            $this->dni              = $u->dni;
+            $this->password         = '';
+            $this->id_rol           = (string) $u->id_rol;
+            $this->id_comercio      = $u->id_comercio;
+            $this->bloqueado        = (int)($u->bloqueado ?? 0);
+            $this->motivo_bloqueo   = $u->motivo_bloqueo ?? '';
             $this->menusSeleccionados = MenuUsuario::where('id_usuario', $id)
                 ->where('estado', 1)
                 ->pluck('id_menu')
                 ->map(fn($v) => (string) $v)
                 ->toArray();
         } else {
-            $this->reset(['nombre_completo', 'dni', 'password', 'id_rol', 'menusSeleccionados']);
-            // Si no es admin, el comercio queda fijo al del usuario autenticado
+            $this->reset(['nombre_completo', 'dni', 'password', 'id_rol', 'menusSeleccionados', 'bloqueado', 'motivo_bloqueo']);
             $this->id_comercio = Auth::user()->id_comercio;
         }
         $this->mostrarFormulario = true;
@@ -75,6 +80,8 @@ class UsuariosComponent extends Component
             'id_rol'          => 'required',
             'id_comercio'     => 'required|integer|min:1',
             'password'        => $this->editandoId ? 'nullable|min:6' : 'required|min:6',
+            'bloqueado'       => 'integer|in:0,1',
+            'motivo_bloqueo'  => 'nullable|max:500',
         ];
     }
 
@@ -89,6 +96,8 @@ class UsuariosComponent extends Component
                 'dni'                  => $this->dni,
                 'id_rol'               => $this->id_rol,
                 'id_comercio'          => $this->id_comercio,
+                'bloqueado'            => $this->bloqueado,
+                'motivo_bloqueo'       => $this->bloqueado ? $this->motivo_bloqueo : null,
                 'usuario_modificacion' => $actor,
                 'fecha_modificacion'   => now(),
             ];
@@ -115,11 +124,13 @@ class UsuariosComponent extends Component
             $id = DB::table('bodega.usuarios')->insertGetId([
                 'nombre_completo'  => $this->nombre_completo,
                 'dni'              => $this->dni,
-                'email'            => $this->dni . '@bodega.local', // email requerido por la tabla
+                'email'            => $this->dni . '@bodega.local',
                 'password'         => bcrypt($this->password),
                 'id_rol'           => $this->id_rol,
                 'id_comercio'      => $this->id_comercio,
                 'estado'           => 1,
+                'bloqueado'        => 0,
+                'acepto_terminos'  => 0,
                 'usuario_creacion' => $actor,
                 'fecha_creacion'   => now(),
             ]);
@@ -136,7 +147,7 @@ class UsuariosComponent extends Component
         }
 
         $this->mostrarFormulario = false;
-        $this->reset(['nombre_completo', 'dni', 'password', 'id_rol', 'menusSeleccionados']);
+        $this->reset(['nombre_completo', 'dni', 'password', 'id_rol', 'menusSeleccionados', 'bloqueado', 'motivo_bloqueo']);
     }
 
     public function desactivar(int $id): void
@@ -149,9 +160,30 @@ class UsuariosComponent extends Component
         session()->flash('ok', 'Usuario desactivado.');
     }
 
+    public function toggleBloqueo(int $id): void
+    {
+        $u = Usuario::findOrFail($id);
+        Usuario::where('id', $id)->update([
+            'bloqueado'            => $u->bloqueado ? 0 : 1,
+            'usuario_modificacion' => Auth::user()->nombre_completo,
+            'fecha_modificacion'   => now(),
+        ]);
+        session()->flash('ok', $u->bloqueado ? 'Usuario desbloqueado.' : 'Usuario bloqueado.');
+    }
+
+    public function restablecerPassword(int $id): void
+    {
+        $u = Usuario::findOrFail($id);
+        Usuario::where('id', $id)->update([
+            'password'             => bcrypt($u->dni),
+            'usuario_modificacion' => Auth::user()->nombre_completo,
+            'fecha_modificacion'   => now(),
+        ]);
+        session()->flash('ok', "Contraseña restablecida. Nueva contraseña: DNI del usuario ({$u->dni}).");
+    }
+
     public function render()
     {
-        // Admin ve todos; el resto solo ve los de su comercio
         $query = Usuario::with('rol')->where('estado', 1);
 
         if (!$this->esAdmin()) {

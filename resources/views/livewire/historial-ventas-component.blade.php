@@ -102,7 +102,7 @@
             <tbody>
                 @forelse($ventas as $v)
                 <tr style="{{ $ventaDetalle === $v->id ? 'background:var(--color-turquesa-muted);' : '' }}">
-                    <td style="font-family:monospace; font-size:.82rem; color:var(--color-celeste-dark);">#{{ $v->id }}</td>
+                    <td style="font-family:monospace; font-size:.82rem; color:var(--color-celeste-dark);">#{{ $v->nro_venta ?? $v->id }}</td>
                     <td>{{ \Carbon\Carbon::parse($v->fecha_creacion)->format('d/m/Y H:i') }}</td>
                     <td class="text-right" style="font-weight:700; color:var(--color-turquesa);">S/ {{ number_format($v->total, 2) }}</td>
                     <td class="text-center">

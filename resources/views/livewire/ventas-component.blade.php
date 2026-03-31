@@ -36,7 +36,7 @@
                 Venta Registrada
             </p>
             <p style="font-size:.9rem; color:var(--color-text-secondary); margin-bottom:1.5rem;">
-                La transaccion se completo correctamente
+                La transacción se completó correctamente
             </p>
 
             <div style="background:var(--color-turquesa-muted); border:1.5px solid var(--color-turquesa-light);
@@ -73,10 +73,9 @@
     <div class="card" style="padding:1.25rem; margin-bottom:1.25rem;">
         <p style="font-size:.8rem; font-weight:600; color:var(--color-text-muted);
                   text-transform:uppercase; letter-spacing:.06em; margin-bottom:.75rem;">
-            Escanear codigo de barras
+            Escanear código de barras
         </p>
 
-        {{-- Indicador visual de captura activa --}}
         <div x-show="activo"
              style="display:flex; align-items:center; gap:.75rem; padding:.75rem 1rem;
                     background:var(--color-turquesa-muted); border-radius:var(--radius-md);
@@ -99,7 +98,7 @@
              @click="activar">
             <div style="width:10px; height:10px; background:var(--color-warning); border-radius:50%;"></div>
             <span style="font-size:.85rem; font-weight:600; color:var(--color-warning);">
-                Haz clic aqui para activar el escaneo
+                Haz clic aquí para activar el escaneo
             </span>
         </div>
 
@@ -107,12 +106,11 @@
         <div class="alert alert-danger" style="margin-bottom:.75rem;">{{ $error }}</div>
         @endif
 
-        {{-- Botón ingreso manual --}}
         <div style="display:flex; align-items:center; gap:.75rem;">
             <button wire:click="toggleManual"
                     class="btn btn-secondary"
                     style="font-size:.8rem; padding:.4rem .9rem;">
-                {{ $mostrarManual ? 'Cancelar' : 'Ingresar codigo manual' }}
+                {{ $mostrarManual ? 'Cancelar' : 'Ingresar código manual' }}
             </button>
             <span style="font-size:.75rem; color:var(--color-text-muted);">
                 Usa esto si el lector no funciona
@@ -124,7 +122,7 @@
             <input wire:model="codigoManual"
                    wire:keydown.enter="buscarManual"
                    class="input"
-                   placeholder="Escribe el codigo de barras..."
+                   placeholder="Escribe el código de barras..."
                    style="flex:1;"
                    autofocus>
             <button wire:click="buscarManual" class="btn btn-primary">Buscar</button>
@@ -132,7 +130,7 @@
         @endif
     </div>
 
-    {{-- Foto ultimo producto agregado --}}
+    {{-- Foto último producto agregado --}}
     @if(count($carrito) && $carrito[array_key_last($carrito)]['foto_path'])
     <div style="display:flex; justify-content:center; margin-bottom:1.25rem;">
         <img src="{{ Storage::url($carrito[array_key_last($carrito)]['foto_path']) }}"
@@ -144,17 +142,26 @@
 
     {{-- Carrito --}}
     <div class="table-wrap animate-fade-in delay-100" style="margin-bottom:1.25rem;">
-        <div style="padding:.85rem 1.25rem; border-bottom:1px solid var(--color-border);">
+        <div style="padding:.85rem 1.25rem; border-bottom:1px solid var(--color-border); display:flex; align-items:center; gap:.75rem;">
             <span style="font-weight:700; font-size:.95rem;">Carrito</span>
             @if(count($carrito))
-            <span class="badge badge-info" style="margin-left:.5rem;">{{ count($carrito) }} items</span>
+            <span class="badge badge-info">{{ count($carrito) }} ítems</span>
+            @endif
+            @if($precioHelada > 0)
+            <span style="margin-left:auto; font-size:.75rem; color:var(--color-celeste-dark);
+                         background:var(--color-celeste-muted); padding:.2rem .65rem;
+                         border-radius:var(--radius-pill); border:1px solid var(--color-celeste-dark);">
+                🧊 Precio helada: +S/ {{ number_format($precioHelada, 2) }}
+            </span>
             @endif
         </div>
         <table>
             <thead>
                 <tr>
                     <th>Producto</th>
-                    <th class="text-right">Precio</th>
+                    <th class="text-right">Precio base</th>
+                    <th class="text-center">🧊</th>
+                    <th class="text-right">Precio real</th>
                     <th class="text-right">Cant.</th>
                     <th class="text-right">Subtotal</th>
                     <th class="text-center">—</th>
@@ -162,30 +169,68 @@
             </thead>
             <tbody>
                 @forelse($carrito as $i => $item)
-                <tr class="animate-fade-in">
+                @php
+                    $esHelada    = $heladasCarrito[$i] ?? false;
+                    $precioReal  = $item['precio_unitario'] + ($esHelada ? $precioHelada : 0);
+                    $subtotalReal = $precioReal * $item['cantidad'];
+                @endphp
+                <tr class="animate-fade-in" style="{{ $esHelada ? 'background:var(--color-celeste-muted);' : '' }}">
                     <td>
                         <div style="display:flex; align-items:center; gap:.6rem;">
                             @if($item['foto_path'])
                             <img src="{{ Storage::url($item['foto_path']) }}"
                                  style="width:36px; height:36px; object-fit:cover; border-radius:var(--radius-sm);">
                             @endif
-                            <span style="font-weight:500;">{{ $item['nombre'] }}</span>
+                            <div>
+                                <span style="font-weight:500;">{{ $item['nombre'] }}</span>
+                                @if($esHelada)
+                                <span style="font-size:.7rem; background:var(--color-celeste-dark); color:#fff;
+                                             padding:.1rem .4rem; border-radius:var(--radius-pill); margin-left:.3rem;">
+                                    🧊 helado
+                                </span>
+                                @endif
+                            </div>
                         </div>
                     </td>
-                    <td class="text-right">S/ {{ number_format($item['precio_unitario'], 2) }}</td>
+                    <td class="text-right" style="color:var(--color-text-muted); font-size:.82rem;">
+                        S/ {{ number_format($item['precio_unitario'], 2) }}
+                    </td>
+                    <td class="text-center">
+                        {{-- Toggle helada directo en carrito --}}
+                        <label style="cursor:pointer; display:inline-flex; align-items:center; justify-content:center;
+                                      width:28px; height:28px; border-radius:var(--radius-sm);
+                                      background:{{ $esHelada ? 'var(--color-celeste-dark)' : 'var(--color-surface-2)' }};
+                                      border:1.5px solid {{ $esHelada ? 'var(--color-celeste-dark)' : 'var(--color-border)' }};
+                                      transition:all var(--transition-fast);">
+                            <input type="checkbox"
+                                   wire:model.live="heladasCarrito.{{ $i }}"
+                                   style="display:none;">
+                            <span style="font-size:.9rem;">🧊</span>
+                        </label>
+                    </td>
+                    <td class="text-right" style="font-weight:600; color:{{ $esHelada ? 'var(--color-celeste-dark)' : 'var(--color-text-primary)' }};">
+                        S/ {{ number_format($precioReal, 2) }}
+                        @if($esHelada && $precioHelada > 0)
+                        <div style="font-size:.7rem; color:var(--color-celeste-dark); font-weight:400;">
+                            +S/ {{ number_format($precioHelada, 2) }}
+                        </div>
+                        @endif
+                    </td>
                     <td class="text-right">
                         <span class="badge badge-info">{{ $item['cantidad'] }}</span>
                     </td>
-                    <td class="text-right" style="font-weight:700;">S/ {{ number_format($item['subtotal'], 2) }}</td>
+                    <td class="text-right" style="font-weight:700;">
+                        S/ {{ number_format($subtotalReal, 2) }}
+                    </td>
                     <td class="text-center">
-                        <button wire:click="quitarItem({{ $i }})" class="link-action danger">x</button>
+                        <button wire:click="quitarItem({{ $i }})" class="link-action danger">✕</button>
                     </td>
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="5" style="text-align:center; padding:2.5rem; color:var(--color-text-muted);">
-                        <div style="font-size:2rem; margin-bottom:.5rem;">&#128722;</div>
-                        Carrito vacio — escanea o escribe un codigo para comenzar
+                    <td colspan="7" style="text-align:center; padding:2.5rem; color:var(--color-text-muted);">
+                        <div style="font-size:2rem; margin-bottom:.5rem;">🛒</div>
+                        Carrito vacío — escanea o escribe un código para comenzar
                     </td>
                 </tr>
                 @endforelse
@@ -193,7 +238,7 @@
             @if(count($carrito))
             <tfoot>
                 <tr style="background:var(--color-turquesa-muted); border-top:2px solid var(--color-border);">
-                    <td colspan="3" style="text-align:right; font-weight:700; padding:.85rem 1rem;">TOTAL</td>
+                    <td colspan="5" style="text-align:right; font-weight:700; padding:.85rem 1rem;">TOTAL</td>
                     <td style="text-align:right; font-size:1.15rem; font-weight:800; color:var(--color-turquesa); padding:.85rem 1rem;">
                         S/ {{ number_format($total, 2) }}
                     </td>
@@ -217,38 +262,51 @@
     @if($mostrarModalCobro)
     @teleport('body')
     <div class="modal-backdrop" style="z-index:999;">
-        <div class="modal-box animate-scale-in" style="max-width:520px; width:100%;">
+        <div class="modal-box animate-scale-in" style="max-width:560px; width:100%;">
             <h2 class="modal-title">Cobrar Venta — S/ {{ number_format($total, 2) }}</h2>
 
-            {{-- Heladas --}}
-            <div style="margin-bottom:1.25rem; max-height:200px; overflow-y:auto;">
+            {{-- Resumen heladas en modal --}}
+            @php
+                $tieneHeladas = collect($heladasCarrito)->contains(true);
+            @endphp
+            <div style="margin-bottom:1.25rem; max-height:220px; overflow-y:auto;">
                 <p style="font-size:.78rem; font-weight:600; color:var(--color-text-muted);
                            text-transform:uppercase; letter-spacing:.05em; margin-bottom:.5rem;">
-                    Algún producto va helado?
-                </p>
-                @foreach($carrito as $i => $item)
-                <label style="display:flex; align-items:center; gap:.75rem; padding:.4rem .6rem;
-                               border-radius:var(--radius-md); cursor:pointer;
-                               transition:background var(--transition-fast);"
-                       onmouseover="this.style.background='var(--color-turquesa-muted)'"
-                       onmouseout="this.style.background=''">
-                    <input type="checkbox" wire:model="heladasCarrito.{{ $i }}"
-                           style="width:16px; height:16px; accent-color:var(--color-celeste-dark);">
-                    <span style="flex:1; font-size:.875rem; font-weight:500;">{{ $item['nombre'] }}</span>
-                    <span style="font-size:.8rem; color:var(--color-turquesa);">
-                        x{{ $item['cantidad'] }} — S/ {{ number_format($item['subtotal'], 2) }}
-                    </span>
-                    @if($heladasCarrito[$i] ?? false)
-                    <span style="font-size:.85rem;">*</span>
+                    Productos — marca los que van helados
+                    @if($precioHelada > 0)
+                    <span style="color:var(--color-celeste-dark);">(+S/ {{ number_format($precioHelada, 2) }} c/u)</span>
                     @endif
+                </p>
+                @foreach($carritoExpandido as $i => $item)
+                @php $esH = $heladasCarrito[$i] ?? false; @endphp
+                <label style="display:flex; align-items:center; gap:.75rem; padding:.5rem .65rem;
+                               border-radius:var(--radius-md); cursor:pointer; margin-bottom:.3rem;
+                               background:{{ $esH ? 'var(--color-celeste-muted)' : 'transparent' }};
+                               border:1.5px solid {{ $esH ? 'var(--color-celeste-dark)' : 'var(--color-border)' }};
+                               transition:all var(--transition-fast);">
+                    <input type="checkbox" wire:model.live="heladasCarrito.{{ $i }}"
+                           style="width:16px; height:16px; accent-color:var(--color-celeste-dark);">
+                    <span style="flex:1; font-size:.875rem; font-weight:500;">
+                        {{ $item['nombre'] }}
+                        @if($esH)
+                        <span style="font-size:.72rem; background:var(--color-celeste-dark); color:#fff;
+                                     padding:.1rem .4rem; border-radius:99px; margin-left:.3rem;">🧊 helado</span>
+                        @endif
+                    </span>
+                    <div style="text-align:right; font-size:.8rem;">
+                        <div style="color:var(--color-text-muted);">x{{ $item['cantidad'] }}</div>
+                        <div style="font-weight:700; color:{{ $esH ? 'var(--color-celeste-dark)' : 'var(--color-turquesa)' }};">
+                            S/ {{ number_format(($item['precio_unitario'] + ($esH ? $precioHelada : 0)) * $item['cantidad'], 2) }}
+                        </div>
+                    </div>
                 </label>
                 @endforeach
             </div>
 
-            {{-- Metodo pago --}}
+            {{-- Método de pago --}}
             <p style="font-size:.78rem; font-weight:600; color:var(--color-text-muted);
                        text-transform:uppercase; letter-spacing:.05em; margin-bottom:.5rem;">
-                Metodo de pago
+                Método de pago
             </p>
             <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:.5rem; margin-bottom:1rem;">
                 @foreach(['efectivo' => 'Efectivo', 'yape' => 'Yape', 'plin' => 'Plin', 'otro' => 'Otro'] as $val => $label)
@@ -310,7 +368,16 @@
             @endif
             @endif
 
-            <div style="display:flex; justify-content:flex-end; gap:.65rem; margin-top:.5rem;">
+            {{-- Total final --}}
+            <div style="text-align:right; padding:.65rem .85rem; background:var(--color-turquesa-muted);
+                        border-radius:var(--radius-md); margin-bottom:.75rem; border:1.5px solid var(--color-turquesa-light);">
+                <span style="font-size:.82rem; color:var(--color-text-muted);">Total a cobrar:</span>
+                <span style="font-size:1.3rem; font-weight:800; color:var(--color-turquesa); margin-left:.5rem;">
+                    S/ {{ number_format($total, 2) }}
+                </span>
+            </div>
+
+            <div style="display:flex; justify-content:flex-end; gap:.65rem;">
                 <button wire:click="$set('mostrarModalCobro', false)" class="btn btn-secondary">Cancelar</button>
                 <button wire:click="registrarVenta"
                         @if($metodoPago === 'efectivo' && ($efectivoRecibido === '' || (float)$efectivoRecibido < $total)) disabled @endif
@@ -327,12 +394,6 @@
 
 @push('scripts')
 <script>
-/**
- * Alpine component: captura teclas globalmente para simular lector de barras.
- * - Acumula chars en `buffer`
- * - Si llega Enter O si hay pausa > 300ms con buffer >= 3 chars => envía a Livewire
- * - El input oculto mantiene el foco para recibir los eventos
- */
 function escaner(livewire) {
     return {
         buffer: '',
@@ -340,23 +401,18 @@ function escaner(livewire) {
         timer: null,
 
         init() {
-            // Intentar activar automáticamente al montar
             this.$nextTick(() => this.activar());
 
-            // Re-activar si el usuario hace click en cualquier parte del componente
             this.$el.addEventListener('click', (e) => {
-                // No redirigir si el click fue en un input/button/select/textarea real
                 const tag = e.target.tagName.toLowerCase();
                 if (!['input','button','select','textarea','a','label'].includes(tag)) {
                     this.activar();
                 }
             });
 
-            // Escuchar teclas globalmente
             document.addEventListener('keydown', (e) => {
                 if (!this.activo) return;
 
-                // Si el foco está en un input real (manual o textarea), no interferir
                 const foco = document.activeElement;
                 const tag  = foco ? foco.tagName.toLowerCase() : '';
                 if (['input','textarea','select'].includes(tag) && foco.id !== 'input-escaner-oculto') return;
@@ -367,7 +423,6 @@ function escaner(livewire) {
                     return;
                 }
 
-                // Solo acumular caracteres imprimibles
                 if (e.key.length === 1) {
                     this.buffer += e.key;
                     this.reiniciarTimer();
@@ -382,7 +437,6 @@ function escaner(livewire) {
 
         reiniciarTimer() {
             clearTimeout(this.timer);
-            // Pausa de 300ms = código completo sin Enter (algunos lectores no mandan Enter)
             this.timer = setTimeout(() => {
                 if (this.buffer.length >= 3) this.disparar();
             }, 300);

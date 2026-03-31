@@ -10,7 +10,11 @@ class Usuario extends Authenticatable
 
     public $timestamps = false;
 
-    protected $fillable = ['nombre_completo', 'dni', 'password', 'email', 'id_rol', 'estado','acepto_terminos', 'fecha_acepto_terminos'];
+    protected $fillable = [
+        'nombre_completo', 'dni', 'password', 'email', 'id_rol', 'estado',
+        'acepto_terminos', 'fecha_acepto_terminos', 'bloqueado', 'motivo_bloqueo',   
+        'id_comercio',
+    ];
 
     protected $hidden = ['password'];
 

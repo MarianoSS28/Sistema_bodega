@@ -19,6 +19,7 @@ return Application::configure(basePath: dirname(__DIR__))
         // Middleware que corre en TODAS las rutas web automáticamente
         $middleware->web(append: [
             \App\Http\Middleware\CheckMantenimiento::class,
+            \App\Http\Middleware\CheckTerminos::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

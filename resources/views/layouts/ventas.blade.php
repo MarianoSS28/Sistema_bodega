@@ -7,6 +7,21 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @php
+        $comercioVentas = auth()->check()
+            ? \App\Models\Comercio::find(auth()->user()->id_comercio)
+            : null;
+        $colorVentas = $comercioVentas?->color_primario ?? '#27B86D';
+    @endphp
+    <style>
+    :root {
+        --color-turquesa: {{ $colorVentas }};
+        --color-turquesa-dark: color-mix(in srgb, {{ $colorVentas }} 80%, black);
+        --color-turquesa-light: color-mix(in srgb, {{ $colorVentas }} 20%, white);
+        --color-turquesa-muted: color-mix(in srgb, {{ $colorVentas }} 10%, white);
+        --gradient-brand: linear-gradient(135deg, {{ $colorVentas }} 0%, color-mix(in srgb, {{ $colorVentas }} 80%, #43AA72) 100%);
+    }
+    </style>
     @livewireStyles
 </head>
 <body>

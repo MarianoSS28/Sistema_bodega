@@ -129,7 +129,7 @@
             <div style="padding:.75rem 1rem;">
                 {{-- Info --}}
                 <p style="font-size:.875rem; font-weight:700; color:var(--color-text-primary); margin-bottom:.2rem;">
-                    Venta <span style="color:var(--color-celeste-dark);">#{{ $v->id_venta }}</span>
+                    Venta <span>#{{ $v->nro_venta ?? $v->id_venta }}</span>
                 </p>
                 <p style="font-size:.82rem; color:var(--color-turquesa); font-weight:600; margin-bottom:.2rem;">S/ {{ number_format($v->total, 2) }}</p>
                 <p style="font-size:.75rem; color:var(--color-text-muted); margin-bottom:.75rem;">{{ \Carbon\Carbon::parse($v->fecha_creacion)->format('d/m/Y H:i') }}</p>

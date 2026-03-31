@@ -17,10 +17,10 @@ class ComerciosAdminComponent extends Component
     public string $busqueda = '';
 
     // Form
-    public ?int   $editandoId = null;
-    public string $nombre     = '';
-    public string $direccion  = '';
-    public int    $estado     = 1;
+    public ?int   $editandoId    = null;
+    public string $nombre        = '';
+    public string $direccion     = '';
+    public int    $estado        = 1;
     public $logo    = null;
     public $yape_qr = null;
     public $plin_qr = null;
@@ -28,16 +28,25 @@ class ComerciosAdminComponent extends Component
     public string $yape_qr_path = '';
     public string $plin_qr_path = '';
 
+    // Nuevos campos
+    public int    $bloqueado       = 0;
+    public string $motivo_bloqueo  = '';
+    public string $precio_helada   = '0';
+    public string $color_primario  = '#27B86D';
+
     public bool $mostrarFormulario = false;
 
     protected function rules(): array
     {
         return [
-            'nombre'    => 'required|min:2',
-            'direccion' => 'required|min:5',
-            'logo'      => 'nullable|image|max:2048',
-            'yape_qr'   => 'nullable|image|max:2048',
-            'plin_qr'   => 'nullable|image|max:2048',
+            'nombre'         => 'required|min:2',
+            'direccion'      => 'required|min:5',
+            'logo'           => 'nullable|image|max:2048',
+            'yape_qr'        => 'nullable|image|max:2048',
+            'plin_qr'        => 'nullable|image|max:2048',
+            'precio_helada'  => 'nullable|numeric|min:0',
+            'color_primario' => 'nullable|max:7',
+            'motivo_bloqueo' => 'nullable|max:500',
         ];
     }
 
@@ -53,16 +62,22 @@ class ComerciosAdminComponent extends Component
 
         if ($id) {
             $c = Comercio::findOrFail($id);
-            $this->editandoId  = $id;
-            $this->nombre      = $c->nombre;
-            $this->direccion   = $c->direccion;
-            $this->estado      = $c->estado;
-            $this->logo_path    = $c->logo_path    ?? '';
-            $this->yape_qr_path = $c->yape_qr      ?? '';
-            $this->plin_qr_path = $c->plin_qr      ?? '';
+            $this->editandoId     = $id;
+            $this->nombre         = $c->nombre;
+            $this->direccion      = $c->direccion;
+            $this->estado         = $c->estado;
+            $this->logo_path      = $c->logo_path    ?? '';
+            $this->yape_qr_path   = $c->yape_qr      ?? '';
+            $this->plin_qr_path   = $c->plin_qr      ?? '';
+            $this->bloqueado      = (int)($c->bloqueado ?? 0);
+            $this->motivo_bloqueo = $c->motivo_bloqueo ?? '';
+            $this->precio_helada  = (string)($c->precio_helada ?? '0');
+            $this->color_primario = $c->color_primario ?? '#27B86D';
         } else {
-            $this->reset(['editandoId', 'nombre', 'direccion', 'logo_path', 'yape_qr_path', 'plin_qr_path']);
-            $this->estado = 1;
+            $this->reset(['editandoId', 'nombre', 'direccion', 'logo_path', 'yape_qr_path', 'plin_qr_path',
+                          'bloqueado', 'motivo_bloqueo', 'precio_helada']);
+            $this->estado         = 1;
+            $this->color_primario = '#27B86D';
         }
         $this->mostrarFormulario = true;
     }
@@ -89,31 +104,32 @@ class ComerciosAdminComponent extends Component
             $this->editandoId, $this->nombre, $this->direccion, $this->estado, $actor,
         ]);
 
-        // Actualizar imágenes directamente (el SP solo maneja datos básicos)
+        $camposExtra = [
+            'logo_path'            => $logoPath,
+            'yape_qr'              => $yapePath,
+            'plin_qr'              => $plinPath,
+            'bloqueado'            => $this->bloqueado,
+            'motivo_bloqueo'       => $this->bloqueado ? $this->motivo_bloqueo : null,
+            'precio_helada'        => $this->precio_helada ?: 0,
+            'color_primario'       => $this->color_primario,
+            'usuario_modificacion' => $actor,
+            'fecha_modificacion'   => now(),
+        ];
+
         if ($this->editandoId) {
-            Comercio::where('id', $this->editandoId)->update([
-                'logo_path'            => $logoPath,
-                'yape_qr'              => $yapePath,
-                'plin_qr'              => $plinPath,
-                'usuario_modificacion' => $actor,
-                'fecha_modificacion'   => now(),
-            ]);
+            Comercio::where('id', $this->editandoId)->update($camposExtra);
         } else {
-            // Obtener el id recién insertado
             $nuevo = Comercio::orderByDesc('id')->first();
             if ($nuevo) {
-                $nuevo->update([
-                    'logo_path' => $logoPath,
-                    'yape_qr'   => $yapePath,
-                    'plin_qr'   => $plinPath,
-                ]);
+                $nuevo->update($camposExtra);
             }
         }
 
         $this->mostrarFormulario = false;
         $this->reset(['editandoId', 'nombre', 'direccion', 'logo', 'yape_qr', 'plin_qr',
-                      'logo_path', 'yape_qr_path', 'plin_qr_path']);
-        $this->estado = 1;
+                      'logo_path', 'yape_qr_path', 'plin_qr_path', 'bloqueado', 'motivo_bloqueo', 'precio_helada']);
+        $this->estado         = 1;
+        $this->color_primario = '#27B86D';
         session()->flash('ok', 'Comercio guardado.');
     }
 
@@ -123,6 +139,17 @@ class ComerciosAdminComponent extends Component
             $id, Auth::user()->nombre_completo,
         ]);
         session()->flash('ok', 'Comercio desactivado.');
+    }
+
+    public function toggleBloqueo(int $id): void
+    {
+        $c = Comercio::findOrFail($id);
+        Comercio::where('id', $id)->update([
+            'bloqueado'            => $c->bloqueado ? 0 : 1,
+            'usuario_modificacion' => Auth::user()->nombre_completo,
+            'fecha_modificacion'   => now(),
+        ]);
+        session()->flash('ok', $c->bloqueado ? 'Comercio desbloqueado.' : 'Comercio bloqueado.');
     }
 
     public function render()

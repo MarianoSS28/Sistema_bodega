@@ -1,4 +1,4 @@
-<div class="animate-fade-in" style="max-width:680px;">
+<div class="animate-fade-in" style="max-width:720px;">
     <h1 class="page-title">🏪 Datos del Comercio</h1>
 
     @if(session('ok'))
@@ -6,8 +6,9 @@
     @endif
 
     <div class="card" style="padding:1.75rem;">
-        <div style="display:flex; flex-direction:column; gap:1rem;">
+        <div style="display:flex; flex-direction:column; gap:1.25rem;">
 
+            {{-- Nombre y Dirección --}}
             <div style="display:flex; gap:.75rem;">
                 <div style="flex:1;">
                     <label style="display:block; font-size:.82rem; font-weight:600; color:var(--color-text-secondary); margin-bottom:.3rem;">Nombre del comercio</label>
@@ -33,6 +34,62 @@
                     <input type="file" wire:model="logo" accept="image/*" class="input">
                 </div>
                 @error('logo') <span style="color:var(--color-danger); font-size:.78rem;">{{ $message }}</span> @enderror
+            </div>
+
+            <hr style="border-color:var(--color-border);">
+
+            {{-- Apariencia y Precios --}}
+            <div>
+                <p style="font-size:.85rem; font-weight:700; color:var(--color-text-secondary); margin-bottom:.85rem;">
+                    🎨 Apariencia y configuración de precios
+                </p>
+                <div style="display:flex; gap:1.5rem; flex-wrap:wrap; align-items:flex-start;
+                            padding:1rem 1.25rem; background:var(--color-surface-2);
+                            border-radius:var(--radius-lg); border:1px solid var(--color-border);">
+
+                    {{-- Color primario --}}
+                    <div>
+                        <label style="display:block; font-size:.82rem; font-weight:600; color:var(--color-text-secondary); margin-bottom:.5rem;">
+                            Color del sistema
+                        </label>
+                        <div style="display:flex; align-items:center; gap:.75rem;">
+                            <input wire:model.live="color_primario" type="color"
+                                   style="width:52px; height:44px; padding:3px; border-radius:var(--radius-md);
+                                          border:1.5px solid var(--color-border); cursor:pointer;">
+                            <div>
+                                <div style="width:40px; height:40px; border-radius:var(--radius-md);
+                                            background:{{ $color_primario }};
+                                            box-shadow:0 2px 8px rgba(0,0,0,.15);
+                                            border:2px solid var(--color-border);">
+                                </div>
+                            </div>
+                            <div>
+                                <p style="font-family:monospace; font-size:.82rem; color:var(--color-text-primary); font-weight:600;">
+                                    {{ $color_primario }}
+                                </p>
+                                <p style="font-size:.72rem; color:var(--color-text-muted);">
+                                    Se aplica al siguiente inicio de sesión
+                                </p>
+                            </div>
+                        </div>
+                        @error('color_primario') <span style="color:var(--color-danger); font-size:.78rem;">{{ $message }}</span> @enderror
+                    </div>
+
+                    <div style="width:1px; background:var(--color-border); align-self:stretch;"></div>
+
+                    {{-- Precio helada --}}
+                    <div>
+                        <label style="display:block; font-size:.82rem; font-weight:600; color:var(--color-text-secondary); margin-bottom:.5rem;">
+                            🧊 Precio adicional por producto helado (S/)
+                        </label>
+                        <input wire:model="precio_helada" type="number" step="0.50" min="0"
+                               class="input" style="width:150px;" placeholder="0.00">
+                        <p style="font-size:.72rem; color:var(--color-text-muted); margin-top:.3rem;">
+                            Se suma al precio unitario de cada producto marcado como helado.
+                        </p>
+                        @error('precio_helada') <span style="color:var(--color-danger); font-size:.78rem;">{{ $message }}</span> @enderror
+                    </div>
+                </div>
             </div>
 
             <hr style="border-color:var(--color-border);">

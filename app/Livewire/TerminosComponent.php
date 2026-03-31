@@ -57,6 +57,12 @@ class TerminosComponent extends Component
             $this->editandoId, $this->titulo, $this->contenido, $this->version,
             Auth::user()->nombre_completo,
         ]);
+        
+        DB::statement("
+            UPDATE bodega.parametros
+            SET valor = ?, usuario_modificacion = ?, fecha_modificacion = GETDATE()
+            WHERE nombre = 'version_terminos_condiciones'
+        ", [$this->version, Auth::user()->nombre_completo]);
 
         $this->mostrarFormulario = false;
         $this->reset(['editandoId', 'titulo', 'contenido', 'version']);

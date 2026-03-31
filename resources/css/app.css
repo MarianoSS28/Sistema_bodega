@@ -168,12 +168,12 @@ body {
 
 .nav-link {
     color: rgba(255, 255, 255, .85);
-    font-size: .85rem;
     font-weight: 500;
-    padding: .45rem .9rem;
     border-radius: var(--radius-pill);
     transition: background var(--transition-fast), color var(--transition-fast);
     text-decoration: none;
+    padding: .4rem .65rem;
+    font-size: .8rem;
 }
 
 .nav-link:hover,

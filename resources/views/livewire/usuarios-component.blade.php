@@ -21,7 +21,8 @@
                     <th>DNI</th>
                     <th>Rol</th>
                     <th>Comercio</th>
-                    <th>Menus</th>
+                    <th>Menús</th>
+                    <th class="text-center">Estado</th>
                     <th class="text-center">Acciones</th>
                 </tr>
             </thead>
@@ -35,20 +36,41 @@
                         {{ $u->comercio->nombre ?? '—' }}
                     </td>
                     <td style="font-size:.8rem; color:var(--color-text-muted);">
-                        {{ $u->menus()->count() }} menu(s)
+                        {{ $u->menus()->count() }} menú(s)
                     </td>
                     <td class="text-center">
-                        <div style="display:flex; gap:.5rem; justify-content:center;">
+                        @if((int)($u->bloqueado ?? 0))
+                            <span class="badge badge-danger">🔒 Bloqueado</span>
+                        @else
+                            <span class="badge badge-success">✓ Activo</span>
+                        @endif
+                    </td>
+                    <td class="text-center">
+                        <div style="display:flex; gap:.4rem; justify-content:center; flex-wrap:wrap;">
                             <button wire:click="abrirFormulario({{ $u->id }})" class="link-action">Editar</button>
+
+                            <button wire:click="restablecerPassword({{ $u->id }})"
+                                    wire:confirm="¿Restablecer contraseña al DNI del usuario ({{ $u->dni }})?"
+                                    class="link-action"
+                                    style="color:var(--color-warning);">
+                                🔑 Reset
+                            </button>
+
+                            <button wire:click="toggleBloqueo({{ $u->id }})"
+                                    wire:confirm="{{ (int)($u->bloqueado ?? 0) ? '¿Desbloquear a ' . $u->nombre_completo . '?' : '¿Bloquear a ' . $u->nombre_completo . '?' }}"
+                                    class="link-action {{ (int)($u->bloqueado ?? 0) ? '' : 'danger' }}">
+                                {{ (int)($u->bloqueado ?? 0) ? '🔓 Desbloquear' : '🔒 Bloquear' }}
+                            </button>
+
                             <button wire:click="desactivar({{ $u->id }})"
-                                    wire:confirm="Desactivar este usuario?"
+                                    wire:confirm="¿Desactivar a {{ $u->nombre_completo }}? No podrá iniciar sesión."
                                     class="link-action danger">Eliminar</button>
                         </div>
                     </td>
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="6" style="text-align:center; padding:2.5rem; color:var(--color-text-muted);">
+                    <td colspan="7" style="text-align:center; padding:2.5rem; color:var(--color-text-muted);">
                         Sin usuarios
                     </td>
                 </tr>
@@ -66,11 +88,12 @@
     @if($mostrarFormulario)
     @teleport('body')
     <div class="modal-backdrop">
-        <div class="modal-box animate-scale-in" style="max-width:540px;">
+        <div class="modal-box animate-scale-in" style="max-width:580px; max-height:92vh; overflow-y:auto;">
             <h2 class="modal-title">{{ $editandoId ? 'Editar' : 'Nuevo' }} Usuario</h2>
 
             <div style="display:flex; flex-direction:column; gap:.85rem;">
 
+                {{-- Nombre y DNI --}}
                 <div style="display:flex; gap:.75rem;">
                     <div style="flex:2;">
                         <label style="display:block; font-size:.82rem; font-weight:600; color:var(--color-text-secondary); margin-bottom:.3rem;">Nombre completo</label>
@@ -84,6 +107,7 @@
                     </div>
                 </div>
 
+                {{-- Password y Rol --}}
                 <div style="display:flex; gap:.75rem;">
                     <div style="flex:1;">
                         <label style="display:block; font-size:.82rem; font-weight:600; color:var(--color-text-secondary); margin-bottom:.3rem;">
@@ -104,7 +128,7 @@
                     </div>
                 </div>
 
-                {{-- Comercio: siempre visible, editable solo para admin --}}
+                {{-- Comercio --}}
                 <div>
                     <label style="display:block; font-size:.82rem; font-weight:600; color:var(--color-text-secondary); margin-bottom:.3rem;">Comercio</label>
                     @if($this->esAdmin())
@@ -115,7 +139,6 @@
                         @endforeach
                     </select>
                     @else
-                    {{-- No admin: muestra el nombre pero no puede cambiarlo --}}
                     <div class="input" style="background:var(--color-surface-2); color:var(--color-text-muted); cursor:not-allowed;">
                         {{ $comercios->firstWhere('id', $id_comercio)?->nombre ?? '—' }}
                     </div>
@@ -123,9 +146,33 @@
                     @error('id_comercio') <span style="color:var(--color-danger); font-size:.78rem;">{{ $message }}</span> @enderror
                 </div>
 
-                {{-- Menus --}}
+                {{-- Bloqueo --}}
+                <div style="background:var(--color-danger-light); border:1.5px solid {{ $bloqueado ? 'var(--color-danger)' : 'var(--color-border)' }};
+                            border-radius:var(--radius-md); padding:.85rem 1rem; transition:all var(--transition-base);">
+                    <label style="display:flex; align-items:center; gap:.6rem; cursor:pointer; margin-bottom:0;">
+                        <input type="checkbox" wire:model.live="bloqueado" value="1"
+                               style="width:16px; height:16px; accent-color:var(--color-danger);">
+                        <span style="font-size:.875rem; font-weight:600; color:var(--color-danger);">
+                            🔒 Bloquear acceso a este usuario
+                        </span>
+                    </label>
+                    @if($bloqueado)
+                    <div class="animate-fade-in" style="margin-top:.65rem;">
+                        <label style="display:block; font-size:.78rem; font-weight:600; color:var(--color-danger); margin-bottom:.3rem;">
+                            Motivo del bloqueo (se mostrará al usuario)
+                        </label>
+                        <textarea wire:model="motivo_bloqueo"
+                                  class="input"
+                                  rows="2"
+                                  placeholder="Ej: Cuenta suspendida por revisión interna."
+                                  style="resize:none; border-color:var(--color-danger);"></textarea>
+                    </div>
+                    @endif
+                </div>
+
+                {{-- Menús --}}
                 <div>
-                    <label style="display:block; font-size:.82rem; font-weight:600; color:var(--color-text-secondary); margin-bottom:.5rem;">Acceso a menus</label>
+                    <label style="display:block; font-size:.82rem; font-weight:600; color:var(--color-text-secondary); margin-bottom:.5rem;">Acceso a menús</label>
                     <div style="display:grid; grid-template-columns:repeat(2,1fr); gap:.4rem;">
                         @foreach($menus as $m)
                         <label style="

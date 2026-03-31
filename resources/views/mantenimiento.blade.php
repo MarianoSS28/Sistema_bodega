@@ -67,14 +67,18 @@
 
         <p class="mensaje">
             @php
-                try {
-                    $msg = \Illuminate\Support\Facades\DB::select(
-                        'EXEC bodega.sp_get_parametro @nombre=?', ['MENSAJE_MANTENIMIENTO']
-                    );
-                    echo !empty($msg) ? e($msg[0]->valor) : 'Estamos realizando mejoras. Vuelve pronto.';
-                } catch (\Throwable $e) {
-                    echo 'Estamos realizando mejoras. Vuelve pronto.';
+                $msg = session('mensaje_bloqueo');
+                if (!$msg) {
+                    try {
+                        $r = \Illuminate\Support\Facades\DB::select(
+                            'EXEC bodega.sp_get_parametro @nombre=?', ['MENSAJE_MANTENIMIENTO']
+                        );
+                        $msg = !empty($r) ? e($r[0]->valor) : 'Estamos realizando mejoras. Vuelve pronto.';
+                    } catch (\Throwable) {
+                        $msg = 'Estamos realizando mejoras. Vuelve pronto.';
+                    }
                 }
+                echo e($msg);
             @endphp
         </p>
 

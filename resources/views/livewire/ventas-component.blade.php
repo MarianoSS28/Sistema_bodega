@@ -340,6 +340,34 @@
             @endif
             @endif
 
+            {{-- Toggle fiado --}}
+                <div style="margin-bottom:1rem; padding:.75rem 1rem;
+                            border-radius:var(--radius-md);
+                            background:{{ $esFiado ? 'var(--color-warning-light)' : 'var(--color-surface-2)' }};
+                            border:1.5px solid {{ $esFiado ? 'var(--color-warning)' : 'var(--color-border)' }};
+                            transition:all var(--transition-base);">
+                    <label style="display:flex; align-items:center; gap:.6rem; cursor:pointer;">
+                        <input type="checkbox" wire:model.live="esFiado"
+                            style="width:16px; height:16px; accent-color:var(--color-warning);">
+                        <span style="font-size:.875rem; font-weight:600;
+                                    color:{{ $esFiado ? 'var(--color-warning)' : 'var(--color-text-secondary)' }};">
+                            📒 Registrar como fiado (pago pendiente)
+                        </span>
+                    </label>
+                    @if($esFiado)
+                    <div class="animate-fade-in" style="margin-top:.65rem;">
+                        <label style="display:block; font-size:.78rem; font-weight:600;
+                                    color:var(--color-warning); margin-bottom:.3rem;">Cliente</label>
+                        <select wire:model="clienteFiadoId" class="input" style="border-color:var(--color-warning);">
+                            <option value="">— Seleccionar cliente —</option>
+                            @foreach($clientesFiado as $cl)
+                                <option value="{{ $cl['id'] }}">{{ $cl['nombre'] }} {{ $cl['telefono'] ? '· '.$cl['telefono'] : '' }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    @endif
+                </div>
+
             {{-- Efectivo + vuelto --}}
             @if($metodoPago === 'efectivo')
             <div style="display:flex; gap:.75rem; align-items:flex-end; margin-bottom:1rem;">
@@ -379,12 +407,17 @@
 
             <div style="display:flex; justify-content:flex-end; gap:.65rem;">
                 <button wire:click="$set('mostrarModalCobro', false)" class="btn btn-secondary">Cancelar</button>
-                <button wire:click="registrarVenta"
-                        @if($metodoPago === 'efectivo' && ($efectivoRecibido === '' || (float)$efectivoRecibido < $total)) disabled @endif
+                @if($esFiado)
+                <button wire:click="registrarFiado"
+                        @if(!$clienteFiadoId) disabled @endif
                         class="btn btn-success"
-                        style="opacity:{{ $metodoPago === 'efectivo' && ($efectivoRecibido === '' || (float)$efectivoRecibido < $total) ? '.5' : '1' }};">
-                    Confirmar Venta
+                        style="opacity:{{ $clienteFiadoId ? '1' : '.5' }};">
+                    📒 Confirmar Fiado
                 </button>
+                @else
+                {{-- botón original que ya tienes --}}
+                <button wire:click="registrarVenta" ...>Confirmar Venta</button>
+                @endif
             </div>
         </div>
     </div>

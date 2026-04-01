@@ -2,6 +2,7 @@
 
 namespace App\Livewire;
 
+use App\Models\Cliente;
 use Livewire\Component;
 use App\Models\Producto;
 use Illuminate\Support\Facades\DB;
@@ -28,7 +29,10 @@ class VentasComponent extends Component
     public int    $ultimasCantItems    = 0;
     public array $carritoExpandido     = [];
 
-    // Precio adicional por helada (cargado desde el comercio)
+    public bool   $esFiado         = false;
+    public ?int   $clienteFiadoId  = null;
+    public array  $clientesFiado   = [];
+
     public float  $precioHelada        = 0;
 
     public function mount(): void
@@ -38,6 +42,10 @@ class VentasComponent extends Component
             [Auth::user()->id_comercio]
         );
         $this->precioHelada = (float)($comercio->precio_helada ?? 0);
+
+        $this->clientesFiado = Cliente::where('estado',1)
+        ->where('id_comercio', Auth::user()->id_comercio)
+        ->orderBy('nombre')->get()->toArray();
     }
 
     public function buscarPorBuffer(string $codigo): void
@@ -139,6 +147,42 @@ class VentasComponent extends Component
         $this->metodoPago        = 'efectivo';
         $this->efectivoRecibido  = '';
         $this->mostrarModalCobro = true;
+        $this->esFiado        = false;
+        $this->clienteFiadoId = null;
+    }
+
+    public function registrarFiado(): void
+    {
+        if (empty($this->carrito) || !$this->clienteFiadoId) return;
+
+        $estacion = request()->ip();
+
+        DB::transaction(function () use ($estacion) {
+            $result = DB::select(
+                'EXEC bodega.sp_registrar_fiado @id_comercio=?, @id_cliente=?, @total=?, @estacion=?',
+                [Auth::user()->id_comercio, $this->clienteFiadoId, $this->totalCarrito(), $estacion]
+            );
+            $idFiado = $result[0]->id_fiado;
+
+            foreach ($this->carritoExpandido as $i => $item) {
+                $esHelada    = ($this->heladasCarrito[$i] ?? false) ? 1 : 0;
+                $precioFinal = $item['precio_unitario'] + ($esHelada ? $this->precioHelada : 0);
+                DB::statement(
+                    'EXEC bodega.sp_registrar_fiado_detalle @id_fiado=?, @id_producto=?, @cantidad=?, @precio_unitario=?, @es_helada=?',
+                    [$idFiado, $item['id_producto'], 1, $precioFinal, $esHelada]
+                );
+            }
+        });
+
+        $this->ultimoTotal      = $this->totalCarrito();
+        $this->ultimasCantItems = array_sum(array_column($this->carrito, 'cantidad'));
+        $this->ultimoVuelto     = 0;
+        $this->ultimoMetodoPago = 'fiado';
+        $this->carrito          = [];
+        $this->heladasCarrito   = [];
+        $this->carritoExpandido = [];
+        $this->mostrarModalCobro = false;
+        $this->ventaExitosa      = true;
     }
 
     public function quitarItem(int $index): void

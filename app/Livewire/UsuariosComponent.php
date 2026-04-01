@@ -174,12 +174,15 @@ class UsuariosComponent extends Component
     public function restablecerPassword(int $id): void
     {
         $u = Usuario::findOrFail($id);
+ 
         Usuario::where('id', $id)->update([
-            'password'             => bcrypt($u->dni),
-            'usuario_modificacion' => Auth::user()->nombre_completo,
-            'fecha_modificacion'   => now(),
+            'password'              => bcrypt($u->dni),
+            'debe_cambiar_password' => 1,         
+            'usuario_modificacion'  => Auth::user()->nombre_completo,
+            'fecha_modificacion'    => now(),
         ]);
-        session()->flash('ok', "Contraseña restablecida. Nueva contraseña: DNI del usuario ({$u->dni}).");
+ 
+        session()->flash('ok', "Contraseña restablecida al DNI ({$u->dni}). El usuario deberá cambiarla al iniciar sesión.");
     }
 
     public function render()

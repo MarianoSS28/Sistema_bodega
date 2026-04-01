@@ -26,7 +26,6 @@ class AceptarTerminosComponent extends Component
     {
         $userId = Auth::id();
 
-        // Actualizar directamente con query builder para evitar problemas de modelo
         DB::table('bodega.usuarios')
             ->where('id', $userId)
             ->update([
@@ -34,10 +33,10 @@ class AceptarTerminosComponent extends Component
                 'fecha_acepto_terminos' => now(),
             ]);
 
-        // Forzar recarga de sesión
-        Auth::user()->refresh();
+        // En vez de refresh(), re-autenticar directamente
+        Auth::setUser(Auth::user()->fresh());
 
-        $this->redirect(route('dashboard'));
+        $this->redirect(route('dashboard'), navigate: false);
     }
 
     public function rechazar(): void
@@ -46,7 +45,7 @@ class AceptarTerminosComponent extends Component
         session()->invalidate();
         session()->regenerateToken();
 
-        $this->redirect(route('login'));
+        $this->redirect(route('login'), navigate: false);
     }
 
     public function render()

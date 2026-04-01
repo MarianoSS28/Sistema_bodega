@@ -1,3 +1,35 @@
+@php
+    $tipo = request('tipo');
+    $msg  = request('msg');
+
+    if (!$msg) {
+        try {
+            $r   = \Illuminate\Support\Facades\DB::select(
+                'EXEC bodega.sp_get_parametro @nombre=?', ['MENSAJE_MANTENIMIENTO']
+            );
+            $msg = !empty($r) ? $r[0]->valor : 'Estamos realizando mejoras. Vuelve pronto.';
+        } catch (\Throwable) {
+            $msg = 'Estamos realizando mejoras. Vuelve pronto.';
+        }
+    }
+
+    $icono  = match($tipo) {
+        'usuario'  => '🔒',
+        'comercio' => '🏪',
+        default    => '⚙️',
+    };
+    $badge  = match($tipo) {
+        'usuario'  => 'Cuenta bloqueada',
+        'comercio' => 'Comercio bloqueado',
+        default    => 'En mantenimiento',
+    };
+    $titulo = match($tipo) {
+        'usuario'  => 'Tu cuenta ha sido bloqueada',
+        'comercio' => 'Tu comercio ha sido bloqueado',
+        default    => 'Sistema temporalmente no disponible',
+    };
+    $colorBadge = $tipo ? 'background:#fdf1ef; color:#e0513a;' : '';
+@endphp
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -59,28 +91,13 @@
 </head>
 <body>
     <div class="card">
-        <div class="icon">&#9881;</div>
+        <div class="icon">{{ $icono }}</div>
 
-        <span class="badge">En mantenimiento</span>
+        <span class="badge" style="{{ $colorBadge }}">{{ $badge }}</span>
 
-        <h1>Sistema temporalmente no disponible</h1>
+        <h1>{{ $titulo }}</h1>
 
-        <p class="mensaje">
-            @php
-                $msg = session('mensaje_bloqueo');
-                if (!$msg) {
-                    try {
-                        $r = \Illuminate\Support\Facades\DB::select(
-                            'EXEC bodega.sp_get_parametro @nombre=?', ['MENSAJE_MANTENIMIENTO']
-                        );
-                        $msg = !empty($r) ? e($r[0]->valor) : 'Estamos realizando mejoras. Vuelve pronto.';
-                    } catch (\Throwable) {
-                        $msg = 'Estamos realizando mejoras. Vuelve pronto.';
-                    }
-                }
-                echo e($msg);
-            @endphp
-        </p>
+        <p class="mensaje">{{ e($msg) }}</p>
 
         <p class="footer">
             Si eres administrador puedes

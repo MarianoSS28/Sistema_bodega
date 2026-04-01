@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Http\Middleware;
 
 use Closure;
@@ -9,12 +10,10 @@ class CheckMantenimiento
 {
     public function handle(Request $request, Closure $next)
     {
-        // Rutas siempre libres sin importar nada
         if ($request->routeIs('login', 'logout', 'mantenimiento', 'terminos.publico', 'aceptar-terminos')) {
             return $next($request);
         }
 
-        // Solo verificar mantenimiento si hay sesión activa
         if (!auth()->check()) {
             return $next($request);
         }
@@ -31,14 +30,21 @@ class CheckMantenimiento
         }
 
         if ($activo && !$esAdmin) {
+            // Si es Livewire, devolver respuesta que fuerce redirect en el cliente
+            if ($request->hasHeader('X-Livewire')) {
+                return response()->json(['effects' => ['redirect' => route('mantenimiento')]], 200);
+            }
             return redirect()->route('mantenimiento');
         }
 
         // ── Bloqueo de usuario individual ──
         if (!$esAdmin && (int)($user->bloqueado ?? 0) === 1) {
-            $motivo = $user->motivo_bloqueo ?? 'Tu cuenta ha sido bloqueada.';
-            return redirect()->route('mantenimiento')
-                ->with('mensaje_bloqueo', $motivo);
+            $motivo  = $user->motivo_bloqueo ?? 'Tu cuenta ha sido bloqueada.';
+            $destino = route('mantenimiento', ['tipo' => 'usuario', 'msg' => $motivo]);
+            if ($request->hasHeader('X-Livewire')) {
+                return response()->json(['effects' => ['redirect' => $destino]], 200);
+            }
+            return redirect($destino);
         }
 
         // ── Bloqueo de comercio ──
@@ -48,8 +54,12 @@ class CheckMantenimiento
                 [$user->id_comercio]
             );
             if ($comercio && (int)$comercio->bloqueado === 1) {
-                return redirect()->route('mantenimiento')
-                    ->with('mensaje_bloqueo', $comercio->motivo_bloqueo ?? 'Tu comercio ha sido bloqueado.');
+                $motivo  = $comercio->motivo_bloqueo ?? 'Tu comercio ha sido bloqueado.';
+                $destino = route('mantenimiento', ['tipo' => 'comercio', 'msg' => $motivo]);
+                if ($request->hasHeader('X-Livewire')) {
+                    return response()->json(['effects' => ['redirect' => $destino]], 200);
+                }
+                return redirect($destino);
             }
         }
 

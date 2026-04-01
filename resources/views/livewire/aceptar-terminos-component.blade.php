@@ -20,12 +20,12 @@
     </p>
 
     <div style="display:flex; gap:.75rem; justify-content:flex-end;">
-        <button wire:click="rechazar"
+        <button wire:click="rechazar" wire:loading.attr="disabled"
                 style="padding:.55rem 1.4rem; border-radius:9999px; border:1.5px solid #e0513a;
                        color:#e0513a; background:#fff; font-weight:600; font-size:.875rem; cursor:pointer;">
             Rechazar y salir
         </button>
-        <button wire:click="aceptar"
+        <button wire:click="aceptar" wire:loading.attr="disabled"
                 style="padding:.55rem 1.4rem; border-radius:9999px; background:linear-gradient(135deg,#27B86D,#43AA72);
                        color:#fff; border:none; font-weight:700; font-size:.875rem; cursor:pointer;">
             Acepto los términos

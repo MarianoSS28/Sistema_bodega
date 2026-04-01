@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Http\Middleware;
 
 use Closure;
@@ -9,6 +10,11 @@ class CheckTerminos
     public function handle(Request $request, Closure $next)
     {
         if ($request->routeIs('aceptar-terminos', 'login', 'logout', 'mantenimiento', 'terminos.publico')) {
+            return $next($request);
+        }
+
+        // Permitir que Livewire procese acciones desde la página de aceptar-terminos
+        if ($request->hasHeader('X-Livewire')) {
             return $next($request);
         }
 

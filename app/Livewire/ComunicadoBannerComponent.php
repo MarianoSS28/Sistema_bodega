@@ -16,6 +16,13 @@ class ComunicadoBannerComponent extends Component
     }
 
     public function verificar(): void {
+        // Los administradores (rol 1) no ven los comunicados
+        if ((int) Auth::user()->id_rol === 1) {
+            $this->mostrar    = false;
+            $this->comunicado = null;
+            return;
+        }
+
         $userId = Auth::id();
         $this->comunicado = Comunicado::where('estado', 1)
             ->whereNotExists(function($q) use ($userId) {

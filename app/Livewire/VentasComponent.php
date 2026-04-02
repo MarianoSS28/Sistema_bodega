@@ -212,26 +212,35 @@ class VentasComponent extends Component
     public function registrarVenta(): void
     {
         if (empty($this->carrito)) return;
-        if ($this->metodoPago === 'efectivo' && (float) $this->efectivoRecibido < $this->totalCarrito()) return;
-        if ($this->metodoPago === 'fiado' && !$this->clienteFiadoId) return; 
-        if ($this->metodoPago === 'fiado') {      
+ 
+        // ── Fiado ──────────────────────────────────────────────
+        if ($this->metodoPago === 'fiado') {
+            if (!$this->clienteFiadoId) return;   // sin cliente → no procede
             $this->registrarFiado();
             return;
         }
-
+ 
+        // ── Venta normal (efectivo / yape / plin / otro) ───────
+        if ($this->metodoPago === 'efectivo'
+            && (float) $this->efectivoRecibido < $this->totalCarrito()) {
+            return;   // efectivo insuficiente
+        }
+ 
         $estacion               = request()->ip();
         $this->ultimoTotal      = $this->totalCarrito();
         $this->ultimasCantItems = array_sum(array_column($this->carrito, 'cantidad'));
         $vuelto                 = $this->calcularVuelto();
-        $efectivo               = $this->metodoPago === 'efectivo' ? (float) $this->efectivoRecibido : null;
-
+        $efectivo               = $this->metodoPago === 'efectivo'
+                                    ? (float) $this->efectivoRecibido
+                                    : null;
+ 
         DB::transaction(function () use ($estacion, $vuelto, $efectivo) {
             $result = DB::select(
                 'EXEC bodega.sp_registrar_venta @total=?, @estacion=?, @metodo_pago=?, @efectivo_recibido=?, @vuelto=?, @id_comercio=?',
                 [$this->totalCarrito(), $estacion, $this->metodoPago, $efectivo, $vuelto ?: null, Auth::user()->id_comercio]
             );
             $idVenta = $result[0]->id_venta;
-
+ 
             foreach ($this->carritoExpandido as $i => $item) {
                 $esHelada    = ($this->heladasCarrito[$i] ?? false) ? 1 : 0;
                 $precioFinal = $item['precio_unitario'] + ($esHelada ? $this->precioHelada : 0);
@@ -241,7 +250,7 @@ class VentasComponent extends Component
                 );
             }
         });
-
+ 
         $this->ultimoVuelto      = $vuelto;
         $this->ultimoMetodoPago  = $this->metodoPago;
         $this->carrito           = [];

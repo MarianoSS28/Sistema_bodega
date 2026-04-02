@@ -21,6 +21,7 @@ use App\Livewire\CambiarPasswordComponent;
 use App\Livewire\ClientesComponent;
 use App\Livewire\FiadosComponent;
 use App\Livewire\ComunicadosAdminComponent;
+use App\Livewire\OfertasComponent;
 
 Route::get('/mantenimiento', fn() => view('mantenimiento'))->name('mantenimiento');
 Route::get('/login', LoginComponent::class)->name('login')->middleware('guest');
@@ -58,7 +59,8 @@ Route::middleware(['auth', 'menu.acceso'])->group(function () {
     Route::get('/terminos'              ,   TerminosComponent::class)->name('terminos');
     Route::get('/tickets'               ,   TicketsComponent::class)->name('tickets');
     Route::get('/mantenimiento-admin'   ,   MantenimientoAdminComponent::class)->name('mantenimiento-admin');
-    Route::get('/clientes', ClientesComponent::class)->name('clientes');
-    Route::get('/fiados',   FiadosComponent::class)->name('fiados');
-    Route::get('/comunicados', ComunicadosAdminComponent::class)->name('comunicados');
+    Route::get('/clientes'              ,   ClientesComponent::class)->name('clientes');
+    Route::get('/fiados'                ,   FiadosComponent::class)->name('fiados');
+    Route::get('/comunicados'           ,   ComunicadosAdminComponent::class)->name('comunicados');
+    Route::get('/ofertas'               ,   OfertasComponent::class)->name('ofertas');
 });

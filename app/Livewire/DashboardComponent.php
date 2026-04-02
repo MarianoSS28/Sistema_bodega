@@ -10,6 +10,7 @@ class DashboardComponent extends Component
 {
     public object|null $resumen    = null;
     public array       $ventasDias = [];
+    public array $pagosFiadoDias = [];
 
     public function mount(): void
     {
@@ -22,6 +23,7 @@ class DashboardComponent extends Component
         $result = DB::select('EXEC bodega.sp_dashboard_resumen @id_comercio = ?', [$idComercio]);
         $this->resumen = $result[0] ?? null;
         $this->ventasDias = DB::select('EXEC bodega.sp_ventas_ultimos_dias @dias = 7, @id_comercio = ?', [$idComercio]);
+        $this->pagosFiadoDias = DB::select('EXEC bodega.sp_pagos_fiado_ultimos_dias @dias = 7, @id_comercio = ?', [$idComercio]);
     }
 
     public function render()

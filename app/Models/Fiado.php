@@ -7,9 +7,8 @@ class Fiado extends Model
     protected $table = 'bodega.fiados';
     public $timestamps = false;
     protected $fillable = [
-        'id_comercio','id_cliente','total','total_pagado','estado','estacion_creacion'
+        'id_comercio','id_cliente','nro_fiado','total','total_pagado','estado','estacion_creacion'
     ];
-
     public function cliente() {
         return $this->belongsTo(Cliente::class, 'id_cliente');
     }

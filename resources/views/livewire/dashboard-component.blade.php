@@ -38,6 +38,22 @@
             <p style="font-size:2rem; font-weight:800; color:var(--color-danger); line-height:1;">{{ $resumen->productos_agotados }}</p>
             <p style="font-size:.8rem; color:var(--color-text-muted); margin-top:.25rem;">sin stock</p>
         </div>
+
+        <div class="stat-card animate-fade-in delay-200">
+            <div class="accent-bar" style="background: linear-gradient(90deg,#f59e0b,#fbbf24);"></div>
+            <div class="icon-wrap" style="background:var(--color-warning-light); color:var(--color-warning);">💳</div>
+            <p style="font-size:.78rem; font-weight:600; color:var(--color-text-muted); text-transform:uppercase; letter-spacing:.05em; margin-bottom:.2rem;">Cobros fiado hoy</p>
+            <p style="font-size:2rem; font-weight:800; color:var(--color-text-primary); line-height:1;">{{ $resumen->pagos_fiado_hoy }}</p>
+            <p style="font-size:.9rem; font-weight:700; color:var(--color-warning); margin-top:.25rem;">S/ {{ number_format($resumen->total_pagos_fiado_hoy, 2) }}</p>
+        </div>
+
+        <div class="stat-card animate-fade-in delay-300">
+            <div class="accent-bar" style="background: linear-gradient(90deg,var(--color-danger),#f97316);"></div>
+            <div class="icon-wrap" style="background:var(--color-danger-light); color:var(--color-danger);">📒</div>
+            <p style="font-size:.78rem; font-weight:600; color:var(--color-text-muted); text-transform:uppercase; letter-spacing:.05em; margin-bottom:.2rem;">Deuda activa</p>
+            <p style="font-size:2rem; font-weight:800; color:var(--color-danger); line-height:1;">{{ $resumen->fiados_activos }}</p>
+            <p style="font-size:.9rem; font-weight:700; color:var(--color-danger); margin-top:.25rem;">S/ {{ number_format($resumen->total_deuda_activa, 2) }}</p>
+        </div>
     </div>
 
     {{-- Tabla ventas últimos 7 días --}}

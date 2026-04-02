@@ -19,7 +19,7 @@ class MenusComponent extends Component
         return [
             'nombre' => 'required|min:2',
             'ruta'   => 'required',
-            'icono'  => 'nullable|max:5',
+            'icono'  => 'nullable|max:50',
         ];
     }
 

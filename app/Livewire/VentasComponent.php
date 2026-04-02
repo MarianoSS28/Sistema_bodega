@@ -28,9 +28,9 @@ class VentasComponent extends Component
     public float  $ultimoTotal         = 0;
     public int    $ultimasCantItems    = 0;
     public array $carritoExpandido     = [];
-
     public bool   $esFiado         = false;
     public ?int   $clienteFiadoId  = null;
+
     public array  $clientesFiado   = [];
 
     public float  $precioHelada        = 0;
@@ -147,7 +147,7 @@ class VentasComponent extends Component
         $this->metodoPago        = 'efectivo';
         $this->efectivoRecibido  = '';
         $this->mostrarModalCobro = true;
-        $this->esFiado        = false;
+        $this->esFiado = false;     
         $this->clienteFiadoId = null;
     }
 
@@ -213,6 +213,11 @@ class VentasComponent extends Component
     {
         if (empty($this->carrito)) return;
         if ($this->metodoPago === 'efectivo' && (float) $this->efectivoRecibido < $this->totalCarrito()) return;
+        if ($this->metodoPago === 'fiado' && !$this->clienteFiadoId) return; 
+        if ($this->metodoPago === 'fiado') {      
+            $this->registrarFiado();
+            return;
+        }
 
         $estacion               = request()->ip();
         $this->ultimoTotal      = $this->totalCarrito();

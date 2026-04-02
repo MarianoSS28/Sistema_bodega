@@ -1,4 +1,4 @@
-<div class="animate-fade-in">
+<div class="animate-fade-in" wire:poll.10s>
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.25rem;">
         <h1 class="page-title" style="margin-bottom:0;">
             Soporte / Tickets

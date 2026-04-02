@@ -20,53 +20,141 @@
         --color-turquesa-light: color-mix(in srgb, {{ $colorPrimario }} 20%, white);
         --color-turquesa-muted: color-mix(in srgb, {{ $colorPrimario }} 10%, white);
     }
+    .sidebar {
+        width: 220px;
+        min-height: 100vh;
+        background: var(--gradient-brand);
+        display: flex;
+        flex-direction: column;
+        position: fixed;
+        top: 0; left: 0;
+        z-index: 100;
+        box-shadow: var(--shadow-md);
+    }
+    .sidebar-brand {
+        padding: 1.25rem 1rem 1rem;
+        display: flex;
+        align-items: center;
+        gap: .6rem;
+        border-bottom: 1px solid rgba(255,255,255,.15);
+        margin-bottom: .5rem;
+    }
+    .sidebar-brand span {
+        font-weight: 800;
+        font-size: 1rem;
+        color: #fff;
+        letter-spacing: -.3px;
+        line-height: 1.2;
+    }
+    .sidebar-nav {
+        flex: 1;
+        overflow-y: auto;
+        padding: .25rem .5rem;
+    }
+    .sidebar-nav::-webkit-scrollbar { width: 4px; }
+    .sidebar-nav::-webkit-scrollbar-thumb { background: rgba(255,255,255,.2); border-radius: 99px; }
+    .sidebar-link {
+        display: flex;
+        align-items: center;
+        gap: .6rem;
+        padding: .55rem .75rem;
+        border-radius: var(--radius-md);
+        color: rgba(255,255,255,.82);
+        font-size: .83rem;
+        font-weight: 500;
+        text-decoration: none;
+        transition: background var(--transition-fast), color var(--transition-fast);
+        margin-bottom: .1rem;
+        white-space: nowrap;
+    }
+    .sidebar-link:hover, .sidebar-link.active {
+        background: rgba(255,255,255,.2);
+        color: #fff;
+    }
+    .sidebar-footer {
+        padding: .75rem .5rem;
+        border-top: 1px solid rgba(255,255,255,.15);
+    }
+    .main-content {
+        margin-left: 220px;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+    }
+    .topbar {
+        height: 52px;
+        background: var(--color-surface);
+        border-bottom: 1px solid var(--color-border);
+        display: flex;
+        align-items: center;
+        padding: 0 1.5rem;
+        gap: 1rem;
+        position: sticky;
+        top: 0;
+        z-index: 50;
+    }
     </style>
     @livewireStyles
 </head>
-<body>
+<body style="background:var(--color-bg);">
 
-    <nav class="nav-bar">
-        <span class="brand">
+    {{-- SIDEBAR --}}
+    <aside class="sidebar">
+        <div class="sidebar-brand">
             @if($comercioActual?->logo_path)
                 <img src="{{ Storage::url($comercioActual->logo_path) }}"
-                    style="width:28px; height:28px; object-fit:cover; border-radius:6px; border:2px solid rgba(255,255,255,.3);">
+                    style="width:32px; height:32px; object-fit:cover; border-radius:8px; border:2px solid rgba(255,255,255,.3); flex-shrink:0;">
             @else
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                    stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;">
                     <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
                     <polyline points="9 22 9 12 15 12 15 22"/>
                 </svg>
             @endif
-            {{ $comercioActual?->nombre ?? 'Bodega' }}
-        </span>
+            <span>{{ $comercioActual?->nombre ?? 'Bodega' }}</span>
+        </div>
 
-        <div style="display:flex; align-items:center; gap:.15rem; flex:1; overflow:hidden;">
+        <nav class="sidebar-nav">
             @foreach(Auth::user()->menus()->orderBy('bodega.menus.id')->get() as $menu)
             <a href="{{ route($menu->ruta) }}"
-            class="nav-link {{ request()->routeIs($menu->ruta) ? 'active' : '' }}"
-            style="white-space:nowrap; display:inline-flex; align-items:center; gap:.35rem;">
+               class="sidebar-link {{ request()->routeIs($menu->ruta) ? 'active' : '' }}">
                 {!! \App\Helpers\IconoHelper::get($menu->icono ?? $menu->ruta) !!}
-                <span style="font-size:.78rem;">{{ $menu->nombre }}</span>
+                {{ $menu->nombre }}
             </a>
             @endforeach
+        </nav>
+
+        <div class="sidebar-footer">
+            <div style="padding:.4rem .75rem; margin-bottom:.4rem;">
+                <p style="font-size:.72rem; color:rgba(255,255,255,.55); font-weight:600; text-transform:uppercase; letter-spacing:.04em;">Usuario</p>
+                <p style="font-size:.82rem; color:rgba(255,255,255,.9); font-weight:600; margin-top:.1rem;">{{ Auth::user()->nombre_completo }}</p>
+            </div>
+            <form method="POST" action="{{ route('logout') }}">
+                @csrf
+                <button type="submit" class="sidebar-link" style="width:100%; border:none; cursor:pointer; background:rgba(255,255,255,.12);">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                    Cerrar sesión
+                </button>
+            </form>
+        </div>
+    </aside>
+
+    {{-- MAIN --}}
+    <div class="main-content">
+        {{-- Topbar --}}
+        <div class="topbar">
+            <span style="font-size:.85rem; font-weight:700; color:var(--color-text-secondary);">
+                {{ collect(Auth::user()->menus()->get())->firstWhere('ruta', request()->route()->getName())?->nombre ?? 'Dashboard' }}
+            </span>
+            <div style="margin-left:auto;">
+                <livewire:stock-alertas-badge/>
+            </div>
         </div>
 
-        <div style="margin-left:auto;">
-            <livewire:stock-alertas-badge />
-        </div>
-
-        <form method="POST" action="{{ route('logout') }}" style="margin-left:.5rem;">
-            @csrf
-            <button type="submit" class="nav-link"
-                    style="background:rgba(255,255,255,.15); cursor:pointer; border:none;">
-                {{ Auth::user()->nombre_completo }} &nbsp;·&nbsp; Salir
-            </button>
-        </form>
-    </nav>
-
-    <main style="padding: 1.5rem; max-width: 1400px; margin: 0 auto;">
-        {{ $slot }}
-    </main>
+        <main style="padding: 1.5rem; flex:1;">
+            <livewire:comunicado-banner-component/>
+            {{ $slot }}
+        </main>
+    </div>
 
     @stack('scripts')
     @livewireScripts
